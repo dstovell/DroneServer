@@ -7,9 +7,37 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 // Database
 var mongo = require('mongoskin');
-var db = mongo.db("mongodb://localhost:27017/DroneServer2", {native_parser:true});
+var db = mongo.db("mongodb://localhost:27017/DroneServer2", { native_parser: true });
+
+
+function printTitle() {
+    console.log("                              /~~~~~|     ");
+    console.log("                         .__./''''''|     ");
+    console.log("          ._____________/   |/^^^^^^^\\    ");
+    console.log("          |             `==='\\_______/    ");
+    console.log("          `.             .___/^^^^^^^^\\   ");
+    console.log("            `------------'~~~\\________/   ");
+    console.log("                            `........\\    ");
+    console.log("                              `-------'   ");
+
+    console.log("    ________                              ");
+    console.log("    \\______ \\_______  ____   ____   ____  ");
+    console.log("     |    |  \\_  __ \\/  _ \\ /    \\_/ __ \\ ");
+    console.log("     |    |   \\  | \\(  <_> )   |  \\  ___/ ");
+    console.log("    /_______  /__|   \\____/|___|  /\\___  >");
+    console.log("            \\/                  \\/     \\/ ");
+
+    console.log("              _________                                ");
+    console.log("            /   _____/ ______________  __ ___________   ");
+    console.log("            \\_____  \\_/ __ \\_  __ \\  \\/ // __ \\_  __ \\  ");
+    console.log("            /        \\  ___/|  | \\/\\   /\\  ___/|  | \\/  ");
+    console.log("           /_______  /\\___  >__|    \\_/  \\___  >__|    ");
+    console.log("                   \\/     \\/                 \\/        ");
+}
 
 exports.init = function (port) {
+
+    printTitle();
 
     var app = express();
 
