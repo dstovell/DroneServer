@@ -1,0 +1,75 @@
+<div class="title">
+    <h1>Users</h1>
+</div>
+
+<br><br>
+
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-8">
+		<table>
+			<tr>
+				<th width="10%"></th>
+				<th width="25%">username</th>
+				<th width="25%">email</th>
+				<th width="25%">password</th>
+			</tr>
+
+			<%
+			for (var i in userlist) {
+			%>
+
+			<tr>
+				<td width="10%">
+					<%- parseInt(i) + 1 %>
+				</td>
+				<td width="25%">
+					<%- userlist[i].username %>
+				</td>
+				<td width="25%">
+					<%- userlist[i].email %>
+				</td>
+				<td width="25%">
+					<%- userlist[i].password %>
+				</td>
+			</tr>
+			<%
+			}
+			%>
+
+		</table>
+	</div>
+
+	<div class="col-md-3">
+		<div class="input-group input-group-sm">
+			<span class="input-group-addon">username</span>
+			<input type="text" class="form-control" id="username" placeholder="Username">
+		</div>
+		<div class="input-group input-group-sm">
+			<span class="input-group-addon">email</span>
+			<input type="text" class="form-control" id="email" placeholder="user@gmail.com">
+		</div>
+		<div class="input-group input-group-sm">
+			<span class="input-group-addon">password</span>
+			<input type="password" class="form-control" id="password">
+		</div>
+
+		<button type="button" class="btn btn-default" onclick="onAddUser()">Add User</button>
+	</div>
+
+</div>
+
+<script>
+	function onAddUser() {
+		jQuery.post( "/admin/users/adduser",
+		{
+			username:document.getElementById('username').value,
+			email:document.getElementById('email').value,
+			password:document.getElementById('password').value
+		},
+		function( data ) {
+			location.reload();
+		});
+	}
+
+</script>
