@@ -16,6 +16,7 @@
         "mongodb": "*",
         "mongoskin": "*",
 		"ejs": "*",
-		"ejs-locals": "*"
+		"ejs-locals": "*",
+        "connect-flash": "*"
     }
 }

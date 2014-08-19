@@ -5,9 +5,10 @@ var favicon = require('static-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var flash = require('connect-flash');
 // Database
 var mongo = require('mongoskin');
-var db = mongo.db("mongodb://localhost:27017/DroneServer2", { native_parser: true });
+var db = mongo.db(process.env.MONGO_URL || "mongodb://localhost:27017/DroneServer", { native_parser: true });
 
 
 function printTitle() {
@@ -52,6 +53,7 @@ exports.init = function (port) {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded());
     app.use(cookieParser());
+    app.use(flash());
 
     app.use(express.static(path.join(__dirname, 'static')));
     //app.use(express.methodOverride());
@@ -68,9 +70,11 @@ exports.init = function (port) {
         next();
     });
 
+    var options = { db:db };
+
     app.use('/', require('./routes/admin/index'));
     app.use('/admin', require('./routes/admin/index'));
-    app.use('/admin/users', require('./routes/admin/users'));
+    app.use('/admin/users', require('./routes/admin/users')(options) );
 
     app.use('/api/users', require('./routes/api/users'));
 
