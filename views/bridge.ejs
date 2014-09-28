@@ -175,7 +175,7 @@
 
 		var parent = obj;
 		var foundParent = null;
-		while(!parent)
+		while(!foundParent)
 		{
 			if (parent.parentElement == null) {
 				break;
@@ -193,49 +193,49 @@
 	}
 
 
-	function resizeCanvas(canvas){
-		if (!canvas) {
+	function resizeElement(element){
+		if (!element || !hasClass(element, 'resize-to-container')) {
 			return;
 		}
 
-        var canvasPanel = document.getElementById("canvas-container");
+        var container = getFirstParentElement(element, "resize-container");
 
-		var targetHeight = window.innerHeight * canvas.getAttribute('rheight');
-		var targetWidth = canvasPanel.clientWidth - 30;
+		var targetHeight = window.innerHeight * element.getAttribute('rheight');
+		var targetWidth = container.clientWidth - 30;
 
-		if (canvas.getAttribute('rwidth') != null) {
-			targetWidth = window.innerHeight * canvas.getAttribute('rwidth');
+		if (element.getAttribute('rwidth') != null) {
+			targetWidth = window.innerHeight * element.getAttribute('rwidth');
 		}
 
-        if (canvas.width != targetWidth)
+        if (element.width != targetWidth)
         {
-            canvas.width = targetWidth;
+            element.width = targetWidth;
         }
 
-        if (canvas.height != targetHeight)
+        if (element.height != targetHeight)
         {
-            canvas.height = targetHeight;
+            element.height = targetHeight;
         }
     }
 
-    function resizeAllCanvas(){
-    	var canvasArray = document.getElementsByTagName("canvas");
+    function resizeAllElements(){
+    	var elementArray = document.getElementsByClassName("resize-to-container")
 
-		for (var i=0; i < canvasArray.length; i++) {
-		     resizeCanvas( canvasArray[i] );
+		for (var i=0; i < elementArray.length; i++) {
+		     resizeElement( elementArray[i] );
 		}
 	}
 
     $(document).ready(function() {
-    	window.addEventListener('resize', resizeAllCanvas, false);
-        resizeAllCanvas();
+    	window.addEventListener('resize', resizeAllElements, false);
+        resizeAllElements();
 	});
 </script>
 
 <div class="row">
 	<div class="col-md-1"></div>
 	<div class="col-md-10">
-		<div class="panel panel-primary game-ui" id="canvas-container">
+		<div class="panel panel-primary game-ui resize-container" id="resize-container">
 			<div class="panel-heading">
 				<h4 class="panel-title">
 					<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="game-ui">
@@ -245,7 +245,7 @@
 		    </div>
 		    <div id="collapseOne" class="panel-collapse collapse">
 				<div class="panel-body">
-					<canvas id="canvas" class="star-map-bg" rheight=0.6 keepalive="true"></canvas>
+					<canvas id="canvas" class="star-map-bg resize-to-container" rheight=0.6 keepalive="true"></canvas>
 					<div class="row">
 						<div class="col-md-2"></div>
 						<div class="col-md-8">
