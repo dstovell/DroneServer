@@ -1,5 +1,6 @@
 var express = require('express');
 var engine = require('ejs-locals');
+var expressLayouts = require('express-ejs-layouts');
 var path = require('path');
 var favicon = require('static-favicon');
 var logger = require('morgan');
@@ -47,7 +48,9 @@ exports.init = function (port) {
     // view engine setup
     app.set('views', path.join(__dirname, 'views'));
     app.set('view engine', 'ejs');
+    app.set('layout', 'layout')
 
+    app.use(expressLayouts);
     app.use(favicon());
     app.use(logger('dev'));
     app.use(bodyParser.json());
@@ -62,7 +65,7 @@ exports.init = function (port) {
     app.locals.title = 'DroneServer2';
     app.locals.description = 'DroneServer2';
     app.locals.author = 'dstovell';
-    app.locals._layoutFile = true;
+    //app.locals._layoutFile = true;
 
     // Make our db accessible to our router
     app.use(function (req, res, next) {
@@ -77,6 +80,8 @@ exports.init = function (port) {
     app.use('/admin/users', require('./routes/admin/users')(options) );
 
     app.use('/api/users', require('./routes/api/users'));
+
+    app.use('/game/bridge', require('./routes/game/bridge')(options) );
 
     //var art = require('framework/art');
 

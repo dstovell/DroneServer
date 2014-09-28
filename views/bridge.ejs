@@ -1,0 +1,557 @@
+<style>
+	.game-ui {
+   		background-color: rgba(0, 245, 245, 0.6);
+   		border-color: rgb(0, 245, 245);
+	}
+
+	a.game-ui {
+   		background-color: rgba(0, 0, 0, 0);
+	}
+
+</style>
+
+
+<script type="text/paperscript" canvas="canvas">
+	var linkWidth = 3;
+	var starRingRadius = 15;
+
+	function vector2(x, y) {
+		return {x:x, y:y};
+	}
+
+	function diffVector2(v1, v0) {
+		var x = v1.x - v0.x;
+		var y = v1.y - v0.y;
+		return vector2(x, y);
+	}
+
+	function sumVector2(v1, v0) {
+		var x = v1.x + v0.x;
+		var y = v1.y + v0.y;
+		return vector2(x, y);
+	}
+
+	function multVector2(m, v) {
+		var x = m * v.x;
+		var y = m * v.y;
+		return vector2(x, y);
+	}
+
+	function lengthVector2(v) {
+		var lengthSquared = v.x*v.x + v.y*v.y;
+		return Math.sqrt(lengthSquared);
+	}
+
+	function normalizeVector2(v) {
+		var length = lengthVector2(v);
+		var x = v.x / length;
+		var y = v.y / length;
+		return vector2(x, y);
+	}
+
+	function getPoints(posA, posB) {
+
+		var dirV = normalizeVector2( diffVector2(posA, posB) );
+		var multiplier = starRingRadius;
+	
+		var points = [];
+		points.push( diffVector2(posA, multVector2(multiplier, dirV)) );
+		points.push( sumVector2(posB, multVector2(multiplier, dirV)) );
+		return points;
+	}
+
+	var map = <%- JSON.stringify(map) %>;
+
+	var stars = [];
+	var links = [];
+	var linkRings = [];
+
+	for (var i in map.links) {
+		var starA_id = map.links[i][0];
+		var starB_id = map.links[i][1];
+		var starA = map.stars[starA_id-1];
+		var starB = map.stars[starB_id-1];
+
+		var points = getPoints(starA.pos, starB.pos);
+
+		var link = new Path.Line({
+		    from: [points[0].x, points[0].y],
+		    to: [points[1].x, points[1].y],
+		    strokeColor: 'cyan',
+		    strokeWidth: linkWidth
+		});
+
+		links.push(link);
+	}
+
+	for (var i in map.stars) {
+		var data = map.stars[i];
+		var star = new Path.Circle({
+	        center: new Point(data.pos.x, data.pos.y),
+	        radius: data.type.radius,
+	        fillColor: data.type.color,
+	        strokeColor: data.type.color
+	    });
+
+	    //console.log("create star pos=[" + data.pos.x + "," + data.pos.y + "] color=" + data.type.color)
+
+	    stars.push(star);
+
+	    var ring = new Path.Circle({
+	        center: new Point(data.pos.x, data.pos.y),
+	        radius: starRingRadius,
+	        strokeColor: 'cyan',
+	        strokeWidth: linkWidth
+	    });
+
+	    linkRings.push(ring);
+	}
+
+    function onMouseMove(event) {
+        //mouseVector = view.center - event.point;
+    }
+
+    // The onFrame function is called up to 60 times a second:
+    function onFrame(event) {
+        //vector = vector + (mouseVector - vector) / 30;
+
+        // Run through the active layer's children list and change
+        // the position of the placed symbols:
+        /*for (var i = 0; i < count; i++) {
+            var item = project.activeLayer.children[i];
+            var size = item.bounds.size;
+            var length = vector.length / 10 * size.width / 10;
+            item.position += vector.normalize(length) + item.data.vector;
+            keepInView(item);
+        }*/
+    }
+
+    /*function keepInView(item) {
+        var position = item.position;
+        var itemBounds = item.bounds;
+        var bounds = view.bounds;
+        if (itemBounds.left > bounds.width) {
+            position.x = -item.bounds.width;
+        }
+
+        if (position.x < -itemBounds.width) {
+            position.x = bounds.width + itemBounds.width;
+        }
+
+        if (itemBounds.top > view.size.height) {
+            position.y = -itemBounds.height;
+        }
+
+        if (position.y < -itemBounds.height) {
+            position.y = bounds.height  + itemBounds.height / 2;
+        }
+    }*/
+</script>
+
+<script>
+	function hasClass(element, cls) {
+    	return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
+	}
+
+	function getFirstParentElement(obj, parentClassName) {
+		var wellBaseMultiplier = 1.0;
+
+		var parent = obj;
+		var foundParent = null;
+		while(!parent)
+		{
+			if (parent.parentElement == null) {
+				break;
+			}
+
+			if (hasClass(parent, parentClassName)) {
+				foundParent = parent;
+			}
+			else {
+				parent = parent.parentElement;
+			}
+		}
+		
+		return foundParent;
+	}
+
+
+	function resizeCanvas(canvas){
+		if (!canvas) {
+			return;
+		}
+
+        var canvasPanel = document.getElementById("canvas-container");
+
+		var targetHeight = window.innerHeight * canvas.getAttribute('rheight');
+		var targetWidth = canvasPanel.clientWidth - 30;
+
+		if (canvas.getAttribute('rwidth') != null) {
+			targetWidth = window.innerHeight * canvas.getAttribute('rwidth');
+		}
+
+        if (canvas.width != targetWidth)
+        {
+            canvas.width = targetWidth;
+        }
+
+        if (canvas.height != targetHeight)
+        {
+            canvas.height = targetHeight;
+        }
+    }
+
+    function resizeAllCanvas(){
+    	var canvasArray = document.getElementsByTagName("canvas");
+
+		for (var i=0; i < canvasArray.length; i++) {
+		     resizeCanvas( canvasArray[i] );
+		}
+	}
+
+    $(document).ready(function() {
+    	window.addEventListener('resize', resizeAllCanvas, false);
+        resizeAllCanvas();
+	});
+</script>
+
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-10">
+		<div class="panel panel-primary game-ui" id="canvas-container">
+			<div class="panel-heading">
+				<h4 class="panel-title">
+					<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="game-ui">
+						<span class="badge alert-info"><span class="glyphicon glyphicon-usd"></span> 4000</span>
+					</a>
+				</h4>
+		    </div>
+		    <div id="collapseOne" class="panel-collapse collapse">
+				<div class="panel-body">
+					<canvas id="canvas" style="background:#000000;" rheight=0.6 keepalive="true"></canvas>
+					<div class="row">
+						<div class="col-md-2"></div>
+						<div class="col-md-8">
+							<div class="btn-group">
+								<a class="btn btn-primary active" href="#fakelink"><span class="fui-star-2"></span> Map</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="fui-export"></span> Hanger</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="fui-link"></span> Trade</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="fui-eye"></span> Intel</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="fui-mic"></span> Comms</a>
+							</div>
+						</div>
+						<div class="col-md-2"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-1"></div>
+</div>
+
+<!--
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-3 well game-ui">
+		<div class="row">
+			<div class="col-md-12"><a class="btn btn-primary btn-block btn-lg active" href="#fakelink">Alpha</a><br></div>
+		</div>
+		<div class="row">
+			<div class="col-md-12"><a class="btn btn-primary btn-block btn-lg" href="#fakelink">Bravo</a><br></div>
+		</div>
+		<div class="row">
+			<div class="col-md-12"><a class="btn btn-primary btn-block btn-lg" href="#fakelink">Charlie</a></div>
+		</div>
+	</div>
+	<div class="col-md-4"></div>
+	<div class="col-md-3 well game-ui">
+		<div class="panel panel-default">
+	  		<div class="panel-heading">Panel heading without title</div>
+	  		<div class="panel-body">
+	    		Panel content
+	  		</div>
+		</div>
+	</div>
+</div>
+-->
+
+<script>
+	function Position(x, y)
+	{
+		this.X = x;
+		this.Y = y;
+
+		this.Add = function(val)
+		{
+			var newPos = new Position(this.X, this.Y);
+			if(val != null)
+			{
+				if(!isNaN(val.X))
+					newPos.X += val.X;
+				if(!isNaN(val.Y))
+					newPos.Y += val.Y
+			}
+			return newPos;
+		}
+	  
+		this.Subtract = function(val)
+		{
+			var newPos = new Position(this.X, this.Y);
+			if(val != null)
+			{
+				if(!isNaN(val.X))
+					newPos.X -= val.X;
+				if(!isNaN(val.Y))
+					newPos.Y -= val.Y
+			}
+			return newPos;
+		}
+
+		this.Min = function(val)
+		{
+			var newPos = new Position(this.X, this.Y)
+			if(val == null)
+				return newPos;
+
+			if(!isNaN(val.X) && this.X > val.X)
+				newPos.X = val.X;
+			if(!isNaN(val.Y) && this.Y > val.Y)
+				newPos.Y = val.Y;
+
+			return newPos;  
+		}
+
+		this.Max = function(val)
+		{
+			var newPos = new Position(this.X, this.Y)
+			if(val == null)
+				return newPos;
+
+			if(!isNaN(val.X) && this.X < val.X)
+				newPos.X = val.X;
+			if(!isNaN(val.Y) && this.Y < val.Y)
+				newPos.Y = val.Y;
+
+			return newPos;  
+		}  
+
+		this.Bound = function(lower, upper)
+		{
+			var newPos = this.Max(lower);
+			return newPos.Min(upper);
+		}
+
+		this.Check = function()
+		{
+			var newPos = new Position(this.X, this.Y);
+			if(isNaN(newPos.X))
+				newPos.X = 0;
+			if(isNaN(newPos.Y))
+				newPos.Y = 0;
+			return newPos;
+		}
+
+		this.Apply = function(element)
+		{
+			if(typeof(element) == "string")
+				element = document.getElementById(element);
+			if(element == null)
+				return;
+			if(!isNaN(this.X))
+				element.style.left = this.X + 'px';
+			if(!isNaN(this.Y))
+				element.style.top = this.Y + 'px';  
+		}
+	}
+
+	function hookEvent(element, eventName, callback)
+	{
+		if(typeof(element) == "string")
+			element = document.getElementById(element);
+		if(element == null)
+			return;
+		if(element.addEventListener)
+		{
+			element.addEventListener(eventName, callback, false);
+		}
+		else if(element.attachEvent)
+		{
+			element.attachEvent("on" + eventName, callback);
+		}
+	}
+
+	function unhookEvent(element, eventName, callback)
+	{
+		if(typeof(element) == "string")
+			element = document.getElementById(element);
+		if(element == null)
+			return;
+		if(element.removeEventListener)
+			element.removeEventListener(eventName, callback, false);
+		else if(element.detachEvent)
+			element.detachEvent("on" + eventName, callback);
+	}
+
+	function cancelEvent(e)
+	{
+		e = e ? e : window.event;
+		if(e.stopPropagation)
+			e.stopPropagation();
+	  	if(e.preventDefault)
+	    	e.preventDefault();
+	  	e.cancelBubble = true;
+	  	e.cancel = true;
+	  	e.returnValue = false;
+	  	return false;
+	}
+
+	function getMousePos(eventObj)
+	{
+		eventObj = eventObj ? eventObj : window.event;
+		var pos;
+		if(isNaN(eventObj.layerX))
+			pos = new Position(eventObj.offsetX, eventObj.offsetY);
+		else
+			pos = new Position(eventObj.layerX, eventObj.layerY);
+		return correctOffset(pos, pointerOffset, true);
+	}
+
+	function getEventTarget(e)
+	{
+		e = e ? e : window.event;
+		return e.target ? e.target : e.srcElement;
+	}
+
+	function absoluteCursorPostion(eventObj)
+	{
+		eventObj = eventObj ? eventObj : window.event;
+
+		if(isNaN(window.scrollX))
+		{
+			return new Position(eventObj.clientX + document.documentElement.scrollLeft + document.body.scrollLeft, 
+		  		eventObj.clientY + document.documentElement.scrollTop + document.body.scrollTop);
+		}
+		else
+		{
+			return new Position(eventObj.clientX + window.scrollX, eventObj.clientY + window.scrollY);
+		}
+	}
+
+	function dragObject(element, attachElement, lowerBound, upperBound, startCallback, moveCallback, endCallback, attachLater)
+	{
+		if(typeof(element) == "string")
+			element = document.getElementById(element);
+		if(element == null)
+		  	return;
+
+		var cursorStartPos = null;
+		var elementStartPos = null;
+		var dragging = false;
+		var listening = false;
+		var disposed = false;
+
+		function dragStart(eventObj)
+		{
+			if(dragging || !listening || disposed) return;
+				dragging = true;
+
+			if(startCallback != null)
+			  	startCallback(eventObj, element);
+
+			cursorStartPos = absoluteCursorPostion(eventObj);
+
+			elementStartPos = new Position(parseInt(element.style.left), parseInt(element.style.top));
+
+			elementStartPos = elementStartPos.Check();
+
+			hookEvent(document, "mousemove", dragGo);
+			hookEvent(document, "mouseup", dragStopHook);
+
+			return cancelEvent(eventObj);
+		}
+
+		function dragGo(eventObj)
+		{
+			if(!dragging || disposed) return;
+
+			var newPos = absoluteCursorPostion(eventObj);
+			newPos = newPos.Add(elementStartPos).Subtract(cursorStartPos);
+			newPos = newPos.Bound(lowerBound, upperBound)
+			newPos.Apply(element);
+			if(moveCallback != null)
+			  	moveCallback(newPos, element);
+
+			return cancelEvent(eventObj);
+		}
+
+		function dragStopHook(eventObj)
+		{
+			dragStop();
+			return cancelEvent(eventObj);
+		}
+
+		function dragStop()
+		{
+			if(!dragging || disposed) return;
+			unhookEvent(document, "mousemove", dragGo);
+			unhookEvent(document, "mouseup", dragStopHook);
+			cursorStartPos = null;
+			elementStartPos = null;
+			if(endCallback != null)
+			  	endCallback(element);
+			dragging = false;
+		}
+
+		this.Dispose = function()
+		{
+			if(disposed) return;
+			this.StopListening(true);
+			element = null;
+			attachElement = null
+			lowerBound = null;
+			upperBound = null;
+			startCallback = null;
+			moveCallback = null
+			endCallback = null;
+			disposed = true;
+		}
+
+		this.GetLowerBound = function() { return lowerBound; }
+
+		this.GetUpperBound = function() { return upperBound; }
+
+		this.StartListening = function()
+		{
+			if(listening || disposed) return;
+			listening = true;
+			hookEvent(attachElement, "mousedown", dragStart);
+		}
+
+		this.StopListening = function(stopCurrentDragging)
+		{
+		if(!listening || disposed) return;
+		unhookEvent(attachElement, "mousedown", dragStart);
+		listening = false;
+
+		if(stopCurrentDragging && dragging)
+		  	dragStop();
+		}
+
+		this.IsDragging = function(){ return dragging; }
+		this.IsListening = function() { return listening; }
+		this.IsDisposed = function() { return disposed; }
+
+		if(typeof(attachElement) == "string")
+		attachElement = document.getElementById(attachElement);
+		if(attachElement == null)
+		attachElement = element;
+
+		if(!attachLater)
+		this.StartListening();
+	}
+
+	var el = document.getElementById('draggableElement');
+	var leftEdge = el.parentNode.clientWidth - el.clientWidth;
+	var topEdge = el.parentNode.clientHeight - el.clientHeight;
+	var dragObj = new dragObject(el, null, new Position(leftEdge, topEdge), new Position(0, 0));
+</script>
