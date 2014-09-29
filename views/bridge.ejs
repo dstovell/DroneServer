@@ -1,7 +1,7 @@
 <style>
 	.game-ui {
-   		background-color: rgba(0, 245, 245, 0.6);
-   		border-color: rgb(0, 245, 245);
+   		background-color: rgba(52, 152, 219, 0.6);
+   		border-color: rgb(41, 128, 185);
 	}
 
 	a.game-ui {
@@ -11,7 +11,7 @@
 </style>
 
 
-<script type="text/paperscript" canvas="canvas">
+<script type="text/paperscript" canvas="star-map-canvas">
 	var linkWidth = 3;
 	var starRingRadius = 15;
 
@@ -81,6 +81,7 @@
 		        strokeColor: data.type.color
 		    });
 		}
+		star.data = starData;
 		return star;
 	}
 
@@ -89,6 +90,10 @@
 	var stars = [];
 	var links = [];
 	var linkRings = [];
+
+	/*var raster = new Raster('Sun');
+	raster.radius = 50;
+	raster.position = view.center;*/
 
 	for (var i in map.links) {
 		var starA_id = map.links[i][0];
@@ -128,41 +133,19 @@
         //mouseVector = view.center - event.point;
     }
 
+    function onMouseUp(event) {
+	    for (var i in stars) {
+	    	if (stars[i].contains(event.point)) {
+		       	//alert("Select " + stars[i].data.name);
+		        break;
+		    }
+	    }
+	}
+
     // The onFrame function is called up to 60 times a second:
     function onFrame(event) {
-        //vector = vector + (mouseVector - vector) / 30;
 
-        // Run through the active layer's children list and change
-        // the position of the placed symbols:
-        /*for (var i = 0; i < count; i++) {
-            var item = project.activeLayer.children[i];
-            var size = item.bounds.size;
-            var length = vector.length / 10 * size.width / 10;
-            item.position += vector.normalize(length) + item.data.vector;
-            keepInView(item);
-        }*/
     }
-
-    /*function keepInView(item) {
-        var position = item.position;
-        var itemBounds = item.bounds;
-        var bounds = view.bounds;
-        if (itemBounds.left > bounds.width) {
-            position.x = -item.bounds.width;
-        }
-
-        if (position.x < -itemBounds.width) {
-            position.x = bounds.width + itemBounds.width;
-        }
-
-        if (itemBounds.top > view.size.height) {
-            position.y = -itemBounds.height;
-        }
-
-        if (position.y < -itemBounds.height) {
-            position.y = bounds.height  + itemBounds.height / 2;
-        }
-    }*/
 </script>
 
 <script>
@@ -209,12 +192,24 @@
 
         if (element.width != targetWidth)
         {
-            element.width = targetWidth;
+            element.width = targetWidth + 500;
         }
+
+        if (element.clientWidth != targetWidth)
+        {
+            element.clientWidth = targetWidth;
+        }
+
+        //alert("targetWidth=" + targetWidth + " element.clientWidth=" + element.clientWidth + " element.width=" + )
 
         if (element.height != targetHeight)
         {
             element.height = targetHeight;
+        }
+
+        if (element.clientHeight != targetWidth)
+        {
+            element.clientHeight = targetWidth;
         }
     }
 
@@ -239,25 +234,41 @@
 			<div class="panel-heading">
 				<h4 class="panel-title">
 					<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="game-ui">
-						<span class="badge alert-info"><span class="glyphicon glyphicon-usd"></span> 4000</span>
+						<div class="row">
+							<div class="col-md-1">&nbsp;&nbsp;&nbsp;<span class="badge alert-info"><span class="glyphicon glyphicon-align-justify"></span></span></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-user"></span> dstovell </span></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-envelope"></span> 7 </span></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-usd"></span> 100000 </span></div>
+							<div class="col-md-1"></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-cog"></span> 4000 </span></div>	
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-tint"></span> 2000 </span></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-tree-conifer"></span> 2000 </span></div>
+						</div>
 					</a>
 				</h4>
 		    </div>
 		    <div id="collapseOne" class="panel-collapse collapse">
 				<div class="panel-body">
-					<canvas id="canvas" class="star-map-bg resize-to-container" rheight=0.6 keepalive="true"></canvas>
 					<div class="row">
-						<div class="col-md-2"></div>
-						<div class="col-md-8">
+						<div class="col-md-3"></div>
+						<div class="col-md-6">
 							<div class="btn-group">
-								<a class="btn btn-primary active" href="#fakelink"><span class="fui-star-2"></span> Map</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="fui-export"></span> Hanger</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="fui-link"></span> Trade</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="fui-eye"></span> Intel</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="fui-mic"></span> Comms</a>
+								<a class="btn btn-primary active" href="#fakelink"><span class="glyphicon glyphicon-map-marker"></span> Map</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-plane"></span> Hanger</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-sort"></span> Trade</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-eye-open"></span> Intel</a>
+								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-comment"></span> Comms</a>
 							</div>
+							<br>
 						</div>
-						<div class="col-md-2"></div>
+						<div class="col-md-3"></div>
+					</div>
+
+					<div id="borderBox" class="resize-to-container" rheight=0.5
+							style="position:relative;border:1px solid black;width:1000px;height:400px;overflow:hidden;">
+
+						<canvas id="star-map-canvas" width=2048 height=2048 style="position:absolute;background:#000000;"
+							keepalive="true"></canvas>
 					</div>
 				</div>
 			</div>
@@ -293,9 +304,13 @@
 -->
 
 <script>
-	var el = document.getElementById('draggableElement');
-	var leftEdge = el.parentNode.clientWidth - el.clientWidth;
-	var topEdge = el.parentNode.clientHeight - el.clientHeight;
+	var el = document.getElementById("star-map-canvas");
+	//var leftEdge = el.parentNode.clientWidth - el.width;
+	//var topEdge = el.parentNode.clientHeight - el.height;
+	var leftEdge = 1000- el.width;
+	var topEdge = 500 - el.height;
+
+	//dragObject(element, attachElement, lowerBound, upperBound, startCallback, moveCallback, endCallback, attachLater)
 	var dragObj = new dragObject(el, null, new Position(leftEdge, topEdge), new Position(0, 0));
 </script>
 
@@ -310,4 +325,6 @@
 	<img src="/game/starmap/Uranus.png"/>
 	<img src="/game/starmap/Neptune.png"/>
 	<img src="/game/starmap/Pluto.png"/>
+
+	<img id="starscape" src="/game/starmap/starscape03.jpg"/>
 </div>
