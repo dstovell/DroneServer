@@ -1,32 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<style>
-	html { 
-		background: url(../Background01.jpg) no-repeat center center fixed; 
-		-webkit-background-size: cover;
-		-moz-background-size: cover;
-		-o-background-size: cover;
-		background-size: cover;
-	}
-
-	.star-map-bg { 
-		background: url(..//game/starmap/starscape01.jpg) no-repeat center center fixed; 
-		-webkit-background-size: cover;
-		-moz-background-size: cover;
-		-o-background-size: cover;
-		background-size: cover;
-	}
-
-	.star-map-large {
-	 	width:1024;
-	 	height:1024;
-	 	position:absolute;
-      	top:-333px;
-      	left:-500px;
-     }
-</style>
-
 <html lang="en">
 	<head>
 	    <title><%= title %></title>
@@ -49,6 +23,8 @@
 
 		<link href="/Flat-UI/dist/css/flat-ui.css" rel="stylesheet">
     	<link href="/Flat-UI/docs/assets/css/demo.css" rel="stylesheet">
+
+    	<link href="/game/game-ui.css" rel="stylesheet">
 
     	<style>
 			body {
@@ -94,7 +70,10 @@
 
 	    <script src="/js/paper-full.min.js"></script>
 
+	    <script src="/js/ejs_production.js"></script>
+
 	    <script src="/js/dragObject.js"></script>
+	    <script src="/js/tools.js"></script>
 	</head>
 
 	<body>

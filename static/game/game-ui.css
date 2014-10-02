@@ -1,0 +1,54 @@
+html { 
+	background: url(../Background01.jpg) no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+}
+
+.star-map-bg { 
+	background: url(..//game/starmap/starscape01.jpg) no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+}
+
+.star-map-large {
+ 	width:1024;
+ 	height:1024;
+ 	position:absolute;
+  	top:-333px;
+  	left:-500px;
+ }
+ 
+.game-ui {
+	background-color: rgba(52, 152, 219, 0.6);
+	border-color: rgb(41, 128, 185);
+}
+
+.game-ui-highlight {
+	background-color: rgba(0, 255, 255, 0.6);
+	border-color: rgb(0, 255, 255);
+}
+
+a.game-ui {
+	background-color: rgba(0, 0, 0, 0);
+}
+
+.game-ui-transparent {
+	background-color: rgba(52, 152, 219, 0.0);
+	border-color: rgba(41, 128, 185, 0.0);
+}
+
+.canvas-viewport {
+	position:relative;
+	padding-right:30px;
+	overflow:hidden;
+}
+
+.draggable-canvas {
+	position:relative;
+	padding-right:30px;
+	overflow:hidden;
+}

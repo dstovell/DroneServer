@@ -1,0 +1,218 @@
+<% 	
+	var viewportWidth = appWidth * 0.75;
+	var viewportHeight = appHeight;
+%>
+
+<script>
+	function vector2(x, y) {
+		return {x:x, y:y};
+	}
+
+	function diffVector2(v1, v0) {
+		var x = v1.x - v0.x;
+		var y = v1.y - v0.y;
+		return vector2(x, y);
+	}
+
+	function sumVector2(v1, v0) {
+		var x = v1.x + v0.x;
+		var y = v1.y + v0.y;
+		return vector2(x, y);
+	}
+
+	function multVector2(m, v) {
+		var x = m * v.x;
+		var y = m * v.y;
+		return vector2(x, y);
+	}
+
+	function lengthVector2(v) {
+		var lengthSquared = v.x*v.x + v.y*v.y;
+		return Math.sqrt(lengthSquared);
+	}
+
+	function normalizeVector2(v) {
+		var length = lengthVector2(v);
+		var x = v.x / length;
+		var y = v.y / length;
+		return vector2(x, y);
+	}
+</script>
+
+
+<script type="text/paperscript" canvas="star-map-canvas">
+
+	function Star(data, starRingRadius, linkWidth, useImage, drawImmediately)
+	{
+		this.data = data;
+		this.useImage = useImage;
+		this.starRingRadius = starRingRadius;
+		this.linkWidth = linkWidth;
+		this.starObj = null;
+		this.ringObj = null;
+		this.faction = null;
+		this.fleet = null;
+
+		this.drawStar = function() {
+			if (this.useImage) {
+				this.starObj = new Path.Raster('Sun');
+				/*{
+					image: 'Sun',
+			        center: new Point(data.pos.x, data.pos.y),
+			        radius: data.type.radius
+			    });*/
+
+			    this.starObj.onLoad = function() {
+		            console.log('Successfully loaded image!');
+		        };
+			}
+			else {
+				this.starObj = new Path.Circle({
+			        center: new Point(data.pos.x, data.pos.y),
+			        radius: data.type.radius,
+			        fillColor: data.type.color,
+			        strokeColor: data.type.color
+			    });
+			}
+		}
+
+		this.drawRing = function() {
+			this.ringObj = new Path.Circle({
+		        center: new Point(data.pos.x, data.pos.y),
+		        radius: this.starRingRadius,
+		        strokeColor: 'cyan',
+		        strokeWidth: this.linkWidth
+		    });
+		}
+
+		if (drawImmediately) {
+			this.drawStar();
+			this.drawRing();
+		}
+
+		return this;
+	}
+
+	function StarMap(data, useImage, drawImmediately)
+	{
+		var map = <%= JSON.stringify(map) %>;
+
+		this.linkWidth = 3;
+		this.starRingRadius = 15;
+		this.mapRender = { stars:[], links:[] };
+
+		function getPoints(posA, posB, ringRadius) {
+
+			var dirV = normalizeVector2( diffVector2(posA, posB) );
+			var multiplier = ringRadius;
+		
+			var points = [];
+			points.push( diffVector2(posA, multVector2(multiplier, dirV)) );
+			points.push( sumVector2(posB, multVector2(multiplier, dirV)) );
+			return points;
+		}
+
+		for (var i in map.links) {
+			var starA_id = map.links[i][0];
+			var starB_id = map.links[i][1];
+			var starA = map.stars[starA_id-1];
+			var starB = map.stars[starB_id-1];
+
+			var points = getPoints(starA.pos, starB.pos, this.starRingRadius);
+
+			var link = new Path.Line({
+			    from: [points[0].x, points[0].y],
+			    to: [points[1].x, points[1].y],
+			    strokeColor: 'cyan',
+			    strokeWidth: this.linkWidth
+			});
+
+			this.mapRender.links.push(link);
+		}
+
+		for (var i in map.stars) {
+			var data = map.stars[i];
+
+			var star = new Star(data, this.starRingRadius, this.linkWidth, false, true);
+		    this.mapRender.stars.push(star);
+		}
+
+	    function onMouseMove(event) {
+	        //mouseVector = view.center - event.point;
+	    }
+
+	    function onMouseUp(event) {
+		    for (var i in stars) {
+		    	if (stars[i].contains(event.point)) {
+			       	//alert("Select " + stars[i].data.name);
+			        break;
+			    }
+		    }
+		}
+
+	    // The onFrame function is called up to 60 times a second:
+	    function onFrame(event) {
+
+	    }
+	}
+
+	var starMap = new StarMap();
+
+</script>
+
+
+<div class="row">
+	<div class="col-md-9">
+		<div id="borderBox" class="star-map-bg canvas-viewport" style="width:<%= viewportWidth %>px;height:<%= viewportHeight %>px;">
+			<canvas id="star-map-canvas" width=2048 height=2048 class="draggable-canvas" keepalive="true"></canvas>
+		</div>
+	</div>
+	<div class="col-md-3">
+		<div class="panel panel-primary game-ui-highlight">
+			<div class="panel-heading">
+				<h4 class="panel-title">
+					<a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" class="game-ui">
+						<div class="row">
+							<div class="col-md-1"></div>
+							<div class="col-md-8">
+								<span class="badge alert-info"><span class="glyphicon glyphicon-globe"></span> Data</span>
+							</div>
+						</div>
+					</a>
+				</h4>
+		    </div>
+		    <div id="collapseTwo" class="panel-collapse collapse">
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-md-1"></div>
+						<div class="col-md-10">
+							<img src="/game/starmap/RedStar.png"/>
+						</div>
+						<div class="col-md-1"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	var el = document.getElementById("star-map-canvas");
+	//var leftEdge = el.parentNode.clientWidth - el.width;
+	//var topEdge = el.parentNode.clientHeight - el.height;
+	var leftEdge = 1000- el.width;
+	var topEdge = 500 - el.height;
+
+	//function dragObject(element, attachElement, lowerBound, upperBound, dampening, 
+	//					startCallback, moveCallback, endCallback, attachLater)
+	var dragObj = new dragObject(el, null, new Position(leftEdge, topEdge), new Position(0, 0), 1);
+
+	function shutdownApp(app) {
+		if (app == 'starmap') {
+			//alert('shutting down starmap paper=' + paper);
+			//paper.remove();
+			//paper = null;
+			//paper.project.clear();
+		}
+	}
+</script>

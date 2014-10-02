@@ -1,236 +1,18 @@
-<style>
-	.game-ui {
-   		background-color: rgba(52, 152, 219, 0.6);
-   		border-color: rgb(41, 128, 185);
-	}
+<%
+	var appList = { 
+		starmap:	{display:'Map', glyph:'glyphicon-map-marker', default:true}, 
+		hanger:		{display:'Hanger', glyph:'glyphicon-plane'}, 
+		trade:		{display:'Trade', glyph:'glyphicon-sort'}, 
+		intel: 		{display:'Intel', glyph:'glyphicon-eye-open'}, 
+		comms: 		{display:'Comms', glyph:'glyphicon-comment'} 
+	};
+%>
 
-	a.game-ui {
-   		background-color: rgba(0, 0, 0, 0);
-	}
-
-</style>
-
-
-<script type="text/paperscript" canvas="star-map-canvas">
-	var linkWidth = 3;
-	var starRingRadius = 15;
-
-	function vector2(x, y) {
-		return {x:x, y:y};
-	}
-
-	function diffVector2(v1, v0) {
-		var x = v1.x - v0.x;
-		var y = v1.y - v0.y;
-		return vector2(x, y);
-	}
-
-	function sumVector2(v1, v0) {
-		var x = v1.x + v0.x;
-		var y = v1.y + v0.y;
-		return vector2(x, y);
-	}
-
-	function multVector2(m, v) {
-		var x = m * v.x;
-		var y = m * v.y;
-		return vector2(x, y);
-	}
-
-	function lengthVector2(v) {
-		var lengthSquared = v.x*v.x + v.y*v.y;
-		return Math.sqrt(lengthSquared);
-	}
-
-	function normalizeVector2(v) {
-		var length = lengthVector2(v);
-		var x = v.x / length;
-		var y = v.y / length;
-		return vector2(x, y);
-	}
-
-	function getPoints(posA, posB) {
-
-		var dirV = normalizeVector2( diffVector2(posA, posB) );
-		var multiplier = starRingRadius;
-	
-		var points = [];
-		points.push( diffVector2(posA, multVector2(multiplier, dirV)) );
-		points.push( sumVector2(posB, multVector2(multiplier, dirV)) );
-		return points;
-	}
-
-	function addStar(starData, useImage) {
-		var star = null;
-		if (useImage) {
-			star = new Path.Raster('Sun');/*{
-				image: 'Sun',
-		        center: new Point(data.pos.x, data.pos.y),
-		        radius: data.type.radius
-		    });*/
-
-		    star.onLoad = function() {
-	            console.log('Successfully loaded image!');
-	        };
-		}
-		else {
-			star = new Path.Circle({
-		        center: new Point(data.pos.x, data.pos.y),
-		        radius: data.type.radius,
-		        fillColor: data.type.color,
-		        strokeColor: data.type.color
-		    });
-		}
-		star.data = starData;
-		return star;
-	}
-
-	var map = <%- JSON.stringify(map) %>;
-
-	var stars = [];
-	var links = [];
-	var linkRings = [];
-
-	/*var raster = new Raster('Sun');
-	raster.radius = 50;
-	raster.position = view.center;*/
-
-	for (var i in map.links) {
-		var starA_id = map.links[i][0];
-		var starB_id = map.links[i][1];
-		var starA = map.stars[starA_id-1];
-		var starB = map.stars[starB_id-1];
-
-		var points = getPoints(starA.pos, starB.pos);
-
-		var link = new Path.Line({
-		    from: [points[0].x, points[0].y],
-		    to: [points[1].x, points[1].y],
-		    strokeColor: 'cyan',
-		    strokeWidth: linkWidth
-		});
-
-		links.push(link);
-	}
-
-	for (var i in map.stars) {
-		var data = map.stars[i];
-		var star = addStar(data, false);
-
-	    stars.push(star);
-
-	    var ring = new Path.Circle({
-	        center: new Point(data.pos.x, data.pos.y),
-	        radius: starRingRadius,
-	        strokeColor: 'cyan',
-	        strokeWidth: linkWidth
-	    });
-
-	    linkRings.push(ring);
-	}
-
-    function onMouseMove(event) {
-        //mouseVector = view.center - event.point;
-    }
-
-    function onMouseUp(event) {
-	    for (var i in stars) {
-	    	if (stars[i].contains(event.point)) {
-		       	//alert("Select " + stars[i].data.name);
-		        break;
-		    }
-	    }
-	}
-
-    // The onFrame function is called up to 60 times a second:
-    function onFrame(event) {
-
-    }
-</script>
-
-<script>
-	function hasClass(element, cls) {
-    	return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
-	}
-
-	function getFirstParentElement(obj, parentClassName) {
-		var wellBaseMultiplier = 1.0;
-
-		var parent = obj;
-		var foundParent = null;
-		while(!foundParent)
-		{
-			if (parent.parentElement == null) {
-				break;
-			}
-
-			if (hasClass(parent, parentClassName)) {
-				foundParent = parent;
-			}
-			else {
-				parent = parent.parentElement;
-			}
-		}
-		
-		return foundParent;
-	}
-
-
-	function resizeElement(element){
-		if (!element || !hasClass(element, 'resize-to-container')) {
-			return;
-		}
-
-        var container = getFirstParentElement(element, "resize-container");
-
-		var targetHeight = window.innerHeight * element.getAttribute('rheight');
-		var targetWidth = container.clientWidth - 30;
-
-		if (element.getAttribute('rwidth') != null) {
-			targetWidth = window.innerHeight * element.getAttribute('rwidth');
-		}
-
-        if (element.width != targetWidth)
-        {
-            element.width = targetWidth + 500;
-        }
-
-        if (element.clientWidth != targetWidth)
-        {
-            element.clientWidth = targetWidth;
-        }
-
-        //alert("targetWidth=" + targetWidth + " element.clientWidth=" + element.clientWidth + " element.width=" + )
-
-        if (element.height != targetHeight)
-        {
-            element.height = targetHeight;
-        }
-
-        if (element.clientHeight != targetWidth)
-        {
-            element.clientHeight = targetWidth;
-        }
-    }
-
-    function resizeAllElements(){
-    	var elementArray = document.getElementsByClassName("resize-to-container")
-
-		for (var i=0; i < elementArray.length; i++) {
-		     resizeElement( elementArray[i] );
-		}
-	}
-
-    $(document).ready(function() {
-    	window.addEventListener('resize', resizeAllElements, false);
-        resizeAllElements();
-	});
-</script>
 
 <div class="row">
 	<div class="col-md-1"></div>
 	<div class="col-md-10">
-		<div class="panel panel-primary game-ui resize-container" id="resize-container">
+		<div class="panel panel-primary game-ui resize-container" id="appContainer">
 			<div class="panel-heading">
 				<h4 class="panel-title">
 					<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="game-ui">
@@ -253,55 +35,25 @@
 						<div class="col-md-3"></div>
 						<div class="col-md-6">
 							<div class="btn-group">
-								<a class="btn btn-primary active" href="#fakelink"><span class="glyphicon glyphicon-map-marker"></span> Map</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-plane"></span> Hanger</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-sort"></span> Trade</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-eye-open"></span> Intel</a>
-								<a class="btn btn-primary" href="#fakelink"><span class="glyphicon glyphicon-comment"></span> Comms</a>
+								<% for (var app in appList) { %>
+									<a class="btn btn-primary" href="#" onclick="renderApp('<%= app %>')" id="link_<%= app %>">
+										<span class="glyphicon <%= appList[app].glyph %>"></span> <%= appList[app].display %>
+									</a>
+								<% } %>
 							</div>
 							<br>
 						</div>
 						<div class="col-md-3"></div>
 					</div>
 
-					<div id="borderBox" class="resize-to-container" rheight=0.5
-							style="position:relative;border:1px solid black;width:1000px;height:400px;overflow:hidden;">
+					<div id="gameAppScreen"></div>
 
-						<canvas id="star-map-canvas" width=2048 height=2048 style="position:absolute;background:#000000;"
-							keepalive="true"></canvas>
-					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 	<div class="col-md-1"></div>
 </div>
-
-<!--
-<div class="row">
-	<div class="col-md-1"></div>
-	<div class="col-md-3 well game-ui">
-		<div class="row">
-			<div class="col-md-12"><a class="btn btn-primary btn-block btn-lg active" href="#fakelink">Alpha</a><br></div>
-		</div>
-		<div class="row">
-			<div class="col-md-12"><a class="btn btn-primary btn-block btn-lg" href="#fakelink">Bravo</a><br></div>
-		</div>
-		<div class="row">
-			<div class="col-md-12"><a class="btn btn-primary btn-block btn-lg" href="#fakelink">Charlie</a></div>
-		</div>
-	</div>
-	<div class="col-md-4"></div>
-	<div class="col-md-3 well game-ui">
-		<div class="panel panel-default">
-	  		<div class="panel-heading">Panel heading without title</div>
-	  		<div class="panel-body">
-	    		Panel content
-	  		</div>
-		</div>
-	</div>
-</div>
--->
 
 <script>
 	var el = document.getElementById("star-map-canvas");
@@ -310,8 +62,64 @@
 	var leftEdge = 1000- el.width;
 	var topEdge = 500 - el.height;
 
-	//dragObject(element, attachElement, lowerBound, upperBound, startCallback, moveCallback, endCallback, attachLater)
-	var dragObj = new dragObject(el, null, new Position(leftEdge, topEdge), new Position(0, 0));
+	//function dragObject(element, attachElement, lowerBound, upperBound, dampening, 
+	//					startCallback, moveCallback, endCallback, attachLater)
+	var dragObj = new dragObject(el, null, new Position(leftEdge, topEdge), new Position(0, 0), 1);
+</script>
+
+<script>
+	var config = <%- JSON.stringify(config) %>;
+	var map = <%- JSON.stringify(map) %>;
+
+	var starmapEJS = new EJS({url: '/views/starmap.ejs'});
+
+	var currentApp = null;
+
+	var renderApp = function(app) {
+		if (currentApp == app) {
+			return;
+		}
+		else if (currentApp != null) {
+			shutdownApp(currentApp);
+		}
+		currentApp = app;
+
+		//alert('renderApp app=' + app);
+		//Update Button state
+		<% for (var app in appList) { %>
+			$('#link_<%= app %>').removeClass("active");
+		<% } %>
+		$('#link_' + app).addClass( "active");
+
+		var appContainer = document.getElementById("appContainer");
+		var appWidth = appContainer.clientWidth;
+		var appHeight = window.innerHeight * 0.7;
+
+		if (app == 'starmap') {
+			$('#gameAppScreen').empty();
+			var html = starmapEJS.render({config:config, map:map, appWidth:appWidth, appHeight:appHeight});
+			$('#gameAppScreen').html( html );
+
+			//window.addEventListener('resize', resizeAllElements, false);
+			//resizeAllElements();
+		}
+		else {
+			$('#gameAppScreen').empty();
+		}
+	}
+
+	$(document).ready(function() {
+		<% 
+			for (var app in appList) { 
+				if (appList[app].default) {
+		%>
+					renderApp('<%= app %>');
+		<% 
+					break;
+				}
+			} 
+		%>
+	});
 </script>
 
 <div id="hiddenAssets" style="display: none;">

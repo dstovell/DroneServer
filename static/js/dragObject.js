@@ -161,7 +161,7 @@
 		}
 	}
 
-	function dragObject(element, attachElement, lowerBound, upperBound, startCallback, moveCallback, endCallback, attachLater)
+	function dragObject(element, attachElement, lowerBound, upperBound, dampening, startCallback, moveCallback, endCallback, attachLater)
 	{
 		if(typeof(element) == "string")
 			element = document.getElementById(element);
