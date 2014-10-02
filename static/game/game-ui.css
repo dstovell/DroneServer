@@ -30,6 +30,7 @@ html {
 .game-ui-highlight {
 	background-color: rgba(0, 255, 255, 0.6);
 	border-color: rgb(0, 255, 255);
+	color: rgb(255, 255, 255);
 }
 
 a.game-ui {

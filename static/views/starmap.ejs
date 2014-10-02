@@ -49,9 +49,17 @@
 		this.starRingRadius = starRingRadius;
 		this.linkWidth = linkWidth;
 		this.starObj = null;
-		this.ringObj = null;
+		this.ringObjs = [];
 		this.faction = null;
 		this.fleet = null;
+
+		this.getFactionColor = function() {
+			return (this.faction != null) ? this.faction.color : 'white';
+		}
+
+		this.getFactionName = function() {
+			return (this.faction != null) ? this.faction.name : 'none';
+		}
 
 		this.drawStar = function() {
 			if (this.useImage) {
@@ -77,12 +85,36 @@
 		}
 
 		this.drawRing = function() {
-			this.ringObj = new Path.Circle({
+			var color = this.getFactionColor();
+
+			var outerRing = new Path.Circle({
 		        center: new Point(data.pos.x, data.pos.y),
 		        radius: this.starRingRadius,
-		        strokeColor: 'cyan',
-		        strokeWidth: this.linkWidth
+		        strokeColor: color,
+		        strokeWidth: this.linkWidth-1
 		    });
+
+		    var innerRing = new Path.Circle({
+		        center: new Point(data.pos.x, data.pos.y),
+		        radius: this.starRingRadius-4,
+		        strokeColor: color,
+		        strokeWidth: this.linkWidth-1
+		    });
+
+		    this.ringObjs.push(outerRing);
+		    this.ringObjs.push(innerRing);
+		}
+
+		this.contains = function(point) {
+			if (this.starObj.contains(point)) {
+				return true;
+			}
+			for (var i in this.ringObjs) {
+				if (this.ringObjs[i].contains(point)) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		if (drawImmediately) {
@@ -98,8 +130,10 @@
 		var map = <%= JSON.stringify(map) %>;
 
 		this.linkWidth = 3;
-		this.starRingRadius = 15;
+		this.starRingRadius = 20;
 		this.mapRender = { stars:[], links:[] };
+		this.selectedStar = null;
+		this.selectionCursor = null;
 
 		function getPoints(posA, posB, ringRadius) {
 
@@ -123,7 +157,7 @@
 			var link = new Path.Line({
 			    from: [points[0].x, points[0].y],
 			    to: [points[1].x, points[1].y],
-			    strokeColor: 'cyan',
+			    strokeColor: 'white',
 			    strokeWidth: this.linkWidth
 			});
 
@@ -137,26 +171,63 @@
 		    this.mapRender.stars.push(star);
 		}
 
-	    function onMouseMove(event) {
-	        //mouseVector = view.center - event.point;
-	    }
+		this.selectStar = function(star) {
+			this.selectedStar = star;
+			var type = star.data.type;
+			//{name:'yellow', color:'yellow', radius:10, img:'/game/starmap/Sun.png'},
 
-	    function onMouseUp(event) {
-		    for (var i in stars) {
-		    	if (stars[i].contains(event.point)) {
-			       	//alert("Select " + stars[i].data.name);
-			        break;
-			    }
-		    }
+			$('#object-details').empty();
+			var html = "";
+			html += "<div class='row'><div class='col-md-12'><img src='" + type.img + "'/></div></div>";
+			html += "<div class='row'><div class='col-md-12'><b>" + star.data.name + "</b></div></div>";
+			html += "<div class='row'><div class='col-md-4'><b>Class:</b></div>";
+			html += "<div class='col-md-8'>" + type.name + "</div></div>";
+			html += "<div class='row'><div class='col-md-4'><b>Faction:</b></div>";
+			html += "<div class='col-md-8'>" + star.getFactionName() + "</div></div>";
+			$('#object-details').html( html );
+
+			$('#object-details-panel').removeClass("collapse");
+
+			if (this.selectionCursor == null) {
+				this.selectionCursor = new Path.Circle({
+			        center: new Point(star.data.pos.x, star.data.pos.y),
+			        radius: this.starRingRadius+4,
+			        strokeColor: 'cyan',
+			        strokeWidth: this.linkWidth,
+			        dashArray: [6, 4],
+			    });
+			}
+			else {
+				this.selectionCursor.position = new Point(star.data.pos.x, star.data.pos.y);
+			}
 		}
 
-	    // The onFrame function is called up to 60 times a second:
-	    function onFrame(event) {
-
-	    }
+		this.onFrame = function(event) {
+			if (this.selectionCursor != null) {
+				this.selectionCursor.rotate(1);
+			}
+    	}
 	}
 
 	var starMap = new StarMap();
+
+	function onMouseMove(event) {
+        //mouseVector = view.center - event.point;
+    }
+
+    function onMouseUp(event) {
+	    for (var i in starMap.mapRender.stars) {
+	    	if (starMap.mapRender.stars[i].contains(event.point)) {
+	    		starMap.selectStar(starMap.mapRender.stars[i]);
+		        break;
+		    }
+	    }
+	}
+
+    // The onFrame function is called up to 60 times a second:
+    function onFrame(event) {
+    	starMap.onFrame(event);
+    }
 
 </script>
 
@@ -171,22 +242,21 @@
 		<div class="panel panel-primary game-ui-highlight">
 			<div class="panel-heading">
 				<h4 class="panel-title">
-					<a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" class="game-ui">
+					
 						<div class="row">
 							<div class="col-md-1"></div>
 							<div class="col-md-8">
 								<span class="badge alert-info"><span class="glyphicon glyphicon-globe"></span> Data</span>
 							</div>
 						</div>
-					</a>
+					
 				</h4>
 		    </div>
-		    <div id="collapseTwo" class="panel-collapse collapse">
+		    <div id="object-details-panel" class="panel-collapse collapse">
 				<div class="panel-body">
 					<div class="row">
 						<div class="col-md-1"></div>
-						<div class="col-md-10">
-							<img src="/game/starmap/RedStar.png"/>
+						<div class="col-md-10" id="object-details">
 						</div>
 						<div class="col-md-1"></div>
 					</div>
