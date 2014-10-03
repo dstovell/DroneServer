@@ -82,6 +82,8 @@
 			        strokeColor: data.type.color
 			    });
 			}
+
+			this.starObj.gameObj = this;
 		}
 
 		this.drawRing = function() {
@@ -103,6 +105,10 @@
 
 		    this.ringObjs.push(outerRing);
 		    this.ringObjs.push(innerRing);
+
+		    for (var i in this.ringObjs) {
+		    	this.ringObjs[i].gameObj = this;
+		    }
 		}
 
 		this.contains = function(point) {
@@ -207,6 +213,20 @@
 				this.selectionCursor.rotate(1);
 			}
     	}
+
+    	this.hitTest = function(point) {
+    		var hitOptions = {
+				stroke: true,
+				fill: true,
+				tolerance: 10
+			};
+
+    		var hitResult = project.hitTest(point, hitOptions);
+			if (!hitResult || !hitResult.item)
+				return null;
+
+			return hitResult.item.gameObj;
+    	}
 	}
 
 	var starMap = new StarMap();
@@ -216,11 +236,9 @@
     }
 
     function onMouseUp(event) {
-	    for (var i in starMap.mapRender.stars) {
-	    	if (starMap.mapRender.stars[i].contains(event.point)) {
-	    		starMap.selectStar(starMap.mapRender.stars[i]);
-		        break;
-		    }
+	    var star = starMap.hitTest(event.point);
+	    if (star) {
+	    	starMap.selectStar(star);
 	    }
 	}
 
