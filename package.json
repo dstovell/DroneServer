@@ -17,6 +17,7 @@
         "mongoskin": "*",
 		"ejs": "*",
 		"ejs-locals": "*",
+        "express-ejs-layouts": "*",
         "connect-flash": "*"
     }
 }

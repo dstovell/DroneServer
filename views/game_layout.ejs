@@ -25,6 +25,7 @@
     	<link href="/Flat-UI/docs/assets/css/demo.css" rel="stylesheet">
 
     	<link href="/game/game-ui.css" rel="stylesheet">
+    	<link href="/game/login-popup.css" rel="stylesheet">
 
     	<style>
 			body {
@@ -78,7 +79,142 @@
 
 	<body>
 
-	    <div class="row">
+	    <div id="login-box" class="login-popup">
+        	<a href="#" class="close"><img src="close_pop.png" class="btn_close" title="Close Window" alt="Close" /></a>
+          	<form method="post" class="signin" action="#">
+                <fieldset class="textbox">
+	            	<label class="username">
+		                <span>Username</span>
+		                <input id="username" name="username" value="" type="text" autocomplete="on" placeholder="Username">
+	                </label>
+	                
+	                <label class="password">
+		                <span>Password</span>
+		                <input id="password" name="password" value="" type="password" placeholder="Password">
+	                </label>
+
+	                <label class="password">
+		                <span>Create Account</span>
+		                <input type="checkbox" id="attemptCreate" name="attemptCreate" value="1">
+	                </label>
+
+	                <button class="login-button" type="button" onclick="onLoginSubmit()">
+	                	Login
+	                </button>
+                </fieldset>
+          	</form>
+		</div>
+
+		<script type="text/javascript">
+			function showLoginPopup() {
+				// Getting the variable's value from a link 
+				var loginBox = $('a.login-window').attr('href');
+
+				//Fade in the Popup and add close button
+				$('#login-box').fadeIn(300);
+				
+				//Set the center alignment padding + border
+				var popMargTop = ($(loginBox).height() + 24) / 2; 
+				var popMargLeft = ($(loginBox).width() + 24) / 2; 
+				
+				$(loginBox).css({ 
+					'margin-top' : -popMargTop,
+					'margin-left' : -popMargLeft
+				});
+				
+				// Add the mask to body
+				$('body').append('<div id="mask"></div>');
+				$('#mask').fadeIn(300);
+			}
+
+			function hideLoginPopup(reload) {
+				$('#mask , .login-popup').fadeOut(300 , function() {
+					$('#mask').remove();
+					if (reload) {
+						location.reload();
+					}
+				}); 
+			}
+
+			function onLoginSubmit() {
+				var username = document.getElementById('username').value;
+				var password = document.getElementById('password').value;
+				var attemptCreate = document.getElementById('attemptCreate').checked;
+
+				if (attemptCreate) {
+					addUser(username, password);
+				}
+				else {
+					loginUser(username, password);
+				}
+			}
+
+			function loginUser(username, password) {
+				jQuery.post( "/game/users/loginuser",
+				{
+					username:username,
+					password:password
+				},
+				function( result ) {
+					hideLoginPopup(true);
+				});
+			}
+
+			function addUser(username, password) {
+				jQuery.post( "/game/users/adduser",
+				{
+					username:username,
+					email:'',
+					password:password
+				},
+				function( result ) {
+					hideLoginPopup(true);
+				});
+			}
+
+			function logoutUser() {
+				jQuery.post( "/game/users/logoutuser",
+				{},
+				function( result ) {
+					showLoginPopup();
+					//location.reload();
+				});
+			}
+
+			function getCookie(cname) {
+			    var name = cname + "=";
+			    var ca = document.cookie.split(';');
+			    for(var i=0; i<ca.length; i++) {
+			        var c = ca[i];
+			        while (c.charAt(0)==' ') c = c.substring(1);
+			        if (c.indexOf(name) != -1) return c.substring(name.length,c.length);
+			    }
+			    return "";
+			}
+
+			function isLoggedIn() {
+				if (getCookie('username') != '') {
+					return true;
+				}
+				return false;
+			}
+
+			function getUsername() {
+				return getCookie('username');
+			}
+
+			function getUserId() {
+				return getCookie('uid');
+			}
+
+			$(document).ready(function() {
+				if (!isLoggedIn()) {
+					showLoginPopup();
+				}
+			});
+		</script>
+
+		<div class="row">
 	        <div class="col-md-12">
 	            <%- body %>
 	        </div>

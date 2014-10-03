@@ -18,13 +18,20 @@
 					<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="game-ui">
 						<div class="row">
 							<div class="col-md-1">&nbsp;&nbsp;&nbsp;<span class="badge alert-info"><span class="glyphicon glyphicon-align-justify"></span></span></div>
-							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-user"></span> dstovell </span></div>
+							<div class="col-md-1">
+								<span class="badge alert-info">
+									<span class="glyphicon glyphicon-user"></span> 
+									<span id="usernameSlot"></span> 
+								</span>
+							</div>
 							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-envelope"></span> 7 </span></div>
 							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-usd"></span> 100000 </span></div>
 							<div class="col-md-1"></div>
 							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-cog"></span> 4000 </span></div>	
 							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-tint"></span> 2000 </span></div>
 							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-tree-conifer"></span> 2000 </span></div>
+
+							<div class="col-md-4"></div>
 						</div>
 					</a>
 				</h4>
@@ -32,14 +39,17 @@
 		    <div id="collapseOne" class="panel-collapse collapse">
 				<div class="panel-body">
 					<div class="row">
-						<div class="col-md-3"></div>
-						<div class="col-md-6">
+						<div class="col-md-1"></div>
+						<div class="col-md-8">
 							<div class="btn-group">
 								<% for (var app in appList) { %>
 									<a class="btn btn-primary" href="#" onclick="renderApp('<%= app %>')" id="link_<%= app %>">
 										<span class="glyphicon <%= appList[app].glyph %>"></span> <%= appList[app].display %>
 									</a>
 								<% } %>
+								<a class="btn btn-primary" href="#" onclick="logoutUser()" id="link_logout">
+									<span class="glyphicon glyphicon-log-out"></span> Logout
+								</a>
 							</div>
 							<br>
 						</div>
@@ -119,6 +129,8 @@
 				}
 			} 
 		%>
+
+		$('#usernameSlot').html( getUsername() );
 	});
 </script>
 

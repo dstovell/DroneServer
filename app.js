@@ -82,6 +82,7 @@ exports.init = function (port) {
     app.use('/api/users', require('./routes/api/users'));
 
     app.use('/game/bridge', require('./routes/game/bridge')(options) );
+    app.use('/game/users', require('./routes/game/users')(options) );
 
     //var art = require('framework/art');
 
