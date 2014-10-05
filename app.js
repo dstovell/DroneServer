@@ -41,6 +41,9 @@ var options = {};
 
 //Move this somewhere else later
 options.config = options.config || {
+
+    cdn:'http://dl.dropboxusercontent.com/u/8864550/DroneServer/',
+
     starmap: {
         sectorCount: 1,
         starCount: 40,
@@ -54,12 +57,22 @@ options.config = options.config || {
             {id:'yellow', name:'Yellow Dwarf', color:'yellow', radius:10, img:'/game/starmap/Sun.png'},
             {id:'red', name:'Red Giant', color:'red', radius:10, img:'/game/starmap/RedStar.png'},
             {id:'blue', name:'Blue Giant', color:'blue', radius:10, img:'/game/starmap/BlueStar.png'}
+        ],
+
+        planetTypes: [
+            {id:'C', name:'Glacial', color:'white', radius:2, img:'/game/starmap/Eris.png'},
+            {id:'H', name:'Volcanic', color:'red', radius:2, img:'/game/starmap/Venus.png'},
+            {id:'K', name:'Desert', color:'brown', radius:2, img:'/game/starmap/Mars.png'},
+            {id:'L', name:'Mountain', color:'brown', radius:2, img:'/game/starmap/Mercury.png'},
+            {id:'M', name:'Terrestrial', color:'green', radius:3, img:'/game/starmap/Earth.png'},
+            {id:'O', name:'Oceanic', color:'blue', radius:3, img:'/game/starmap/Neptune.png'},
+            {id:'U', name:'Gas Giant', color:'green', radius:5, img:'/game/starmap/Jupiter.png'},
         ]
     },
 
     factions: {
         npc:[
-            { name:'Feds', color:'green', starCount:10, contiguous:true },
+            { name:'Feds', color:'#007FFF', starCount:10, contiguous:true },
             { name:'Pirates', color:'red', starCount:5, contiguous:false},
             { name:'Civillians', color:'yellow', starCount:0 }
         ]

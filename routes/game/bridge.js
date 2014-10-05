@@ -89,9 +89,16 @@ exports = module.exports = function routeSetup(options) {
                         if (err != null) {
                             //req.flash('error', err);
                         }
+
+                        faction_controller.getDataForSector(fleet.sid, function (err, factionSectors) {
+                            if (err != null) {
+                                //req.flash('error', err);
+                            }
              
-                        //console.log("sector=" + JSON.stringify(sector));
-                        res.render('bridge', { config:options.config, layout:'game_layout', map:sector.map, faction:faction, fleet:fleet });
+                            //console.log("sector=" + JSON.stringify(sector));
+                            res.render('bridge', {  config:options.config, layout:'game_layout', 
+                                                    sector:sector, faction:faction, fleet:fleet, factionSectors:factionSectors });
+                        });
                     });
                 });
             });

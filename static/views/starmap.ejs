@@ -1,6 +1,8 @@
 <% 	
 	var viewportWidth = appWidth * 0.75;
 	var viewportHeight = appHeight;
+
+	var map = sector.map;
 %>
 
 <script>
@@ -52,16 +54,18 @@
 		return null;
 	}
 
-	function Star(data, starRingRadius, linkWidth, useImage, drawImmediately)
+	function Star(data, faction, isCapital, fleet, starRingRadius, starInnerRingRadius, linkWidth, useImage, drawImmediately)
 	{
 		this.data = data;
 		this.useImage = useImage;
 		this.starRingRadius = starRingRadius;
+		this.starInnerRingRadius = starInnerRingRadius;
 		this.linkWidth = linkWidth;
 		this.starObj = null;
 		this.ringObjs = [];
-		this.faction = null;
-		this.fleet = null;
+		this.faction = faction;
+		this.isCapital = isCapital;
+		this.fleet = fleet;
 
 		this.data.type = getStarType(data.type);
 
@@ -70,7 +74,7 @@
 		}
 
 		this.getFactionName = function() {
-			return (this.faction != null) ? this.faction.name : 'none';
+			return (this.faction != null) ? this.faction.fName : 'none';
 		}
 
 		this.drawStar = function() {
@@ -105,22 +109,49 @@
 		        center: new Point(data.pos.x, data.pos.y),
 		        radius: this.starRingRadius,
 		        strokeColor: color,
-		        strokeWidth: this.linkWidth-1
-		    });
-
-		    var innerRing = new Path.Circle({
-		        center: new Point(data.pos.x, data.pos.y),
-		        radius: this.starRingRadius-4,
-		        strokeColor: color,
-		        strokeWidth: this.linkWidth-1
+		        strokeWidth: this.linkWidth
 		    });
 
 		    this.ringObjs.push(outerRing);
-		    this.ringObjs.push(innerRing);
+
+		    if (this.isCapital) {
+				this.drawCapitalRing();
+			}
+			else {
+				var innerRing = new Path.Circle({
+			        center: new Point(data.pos.x, data.pos.y),
+			        radius: this.starInnerRingRadius,
+			        strokeColor: color,
+			        strokeWidth: this.linkWidth
+			    });
+
+			    this.ringObjs.push(innerRing);
+			}
 
 		    for (var i in this.ringObjs) {
 		    	this.ringObjs[i].gameObj = this;
 		    }
+		}
+
+		this.drawCapitalRing = function() {
+			var count = 8;
+			var twoPI = 2 * Math.PI;
+			var inc = twoPI / count;
+
+			var color = this.getFactionColor();
+
+			for (var angle=0; angle<twoPI; angle+=inc) {
+				var x = data.pos.x + this.starInnerRingRadius * Math.cos(angle);
+				var y = data.pos.y + this.starInnerRingRadius * Math.sin(angle);
+				var subStar = new Path.Star({
+				    center: [x, y],
+				    points: 5,
+				    radius1: this.linkWidth*2,
+				    radius2: this.linkWidth,
+				    fillColor: color
+				});
+				this.ringObjs.push(subStar);
+			}
 		}
 
 		this.contains = function(point) {
@@ -146,10 +177,13 @@
 	function StarMap(data, useImage, drawImmediately)
 	{
 		var map = <%= JSON.stringify(map) %>;
+		var factionSectors = <%= JSON.stringify(factionSectors) %>;
 
+		this.sid = <%= sector.sid %>;
 		this.linkWidth = 3;
-		this.starRingRadius = 20;
-		this.mapRender = { stars:[], links:[] };
+		this.starRingRadius = 25;
+		this.starInnerRingRadius = 18;
+		this.mapRender = { stars:[], links:[], fleets:[] };
 		this.selectedStar = null;
 		this.selectionCursor = null;
 
@@ -164,18 +198,40 @@
 			return points;
 		}
 
+		function findOwnerFaction(starId) {
+			for (var i in factionSectors) {
+				if (factionSectors[i].controlled[starId]) {
+					return factionSectors[i];
+				}
+			}
+			return null;
+		}
+
+		function isFactionCapital(starId) {
+			for (var i in factionSectors) {
+				if (factionSectors[i].controlled[starId]) {
+					return factionSectors[i].controlled[starId].capital;
+				}
+			}
+			return false;
+		}
+
 		for (var i in map.links) {
 			var starA_id = map.links[i][0];
 			var starB_id = map.links[i][1];
 			var starA = map.stars[starA_id-1];
 			var starB = map.stars[starB_id-1];
+			var factionA = findOwnerFaction(starA.id);
+			var factionB = findOwnerFaction(starB.id);
 
 			var points = getPoints(starA.pos, starB.pos, this.starRingRadius);
+
+			var color = (factionA && (factionA == factionB)) ? factionA.color : 'white';
 
 			var link = new Path.Line({
 			    from: [points[0].x, points[0].y],
 			    to: [points[1].x, points[1].y],
-			    strokeColor: 'white',
+			    strokeColor: color,
 			    strokeWidth: this.linkWidth
 			});
 
@@ -184,15 +240,33 @@
 
 		for (var i in map.stars) {
 			var data = map.stars[i];
+			var faction = findOwnerFaction(data.id);
+			var isCapital = isFactionCapital(data.id);
 
-			var star = new Star(data, this.starRingRadius, this.linkWidth, false, true);
+			var star = new Star(data, faction, isCapital, null, this.starRingRadius, this.starInnerRingRadius, this.linkWidth, false, true);
 		    this.mapRender.stars.push(star);
 		}
 
 		this.selectStar = function(star) {
+			if (this.selectedStar && this.selectedFleet && (this.selectedFleet.mode == 'orbit')) {
+				var points = getPoints(this.selectedStar.data.pos, star.data.pos, this.starRingRadius);
+				this.selectedFleet.warp(star, points[0], points[1], 5);
+				this.selectedFleet = null;
+				return;
+			}
+
 			this.selectedStar = star;
 			var type = star.data.type;
 			//{name:'yellow', color:'yellow', radius:10, img:'/game/starmap/Sun.png'},
+
+			this.selectedFleet = null;
+			for (var i in this.mapRender.fleets) {
+				var fleet = this.mapRender.fleets[i];
+				if ((fleet.star == star) && fleet.isLocal) {
+					this.selectedFleet = fleet;
+					break;
+				}
+			}
 
 			$('#object-details').empty();
 			var html = "";
@@ -201,7 +275,11 @@
 			html += "<div class='row'><div class='col-md-4'><b>Class:</b></div>";
 			html += "<div class='col-md-8'>" + type.name + "</div></div>";
 			html += "<div class='row'><div class='col-md-4'><b>Faction:</b></div>";
-			html += "<div class='col-md-8'>" + star.getFactionName() + "</div></div>";
+			html += "<div class='col-md-8'>" + star.getFactionName() + " " + (star.isCapital ? "Capital" : "") + "</div></div>";
+			if (this.selectedFleet) {
+				html += "<div class='row'><div class='col-md-4'><b>Fleet:</b></div>";
+				html += "<div class='col-md-8'>" + this.selectedFleet.data.ships[0] + "</div></div>";
+			}
 			$('#object-details').html( html );
 
 			$('#object-details-panel').removeClass("collapse");
@@ -224,6 +302,10 @@
 			if (this.selectionCursor != null) {
 				this.selectionCursor.rotate(1);
 			}
+
+			for (var i in this.mapRender.fleets) {
+				this.mapRender.fleets[i].step();
+			}
     	}
 
     	this.hitTest = function(point) {
@@ -239,17 +321,52 @@
 
 			return hitResult.item.gameObj;
     	}
+
+    	this.addFleet = function(fleetData) {
+
+		    var trailSegments = 10;
+		    var trail = new Path({
+				strokeColor: fleetData.color,
+				strokeWidth: this.linkWidth*2,
+				strokeCap: 'square'
+			});
+			trail.strokeColor.alpha = 0.5;
+			for (var i = 0; i <= trailSegments; i++) {
+				trail.add(new Point(i , i));
+			}
+
+			var shipObj = new Path.RegularPolygon(new Point(0, 0), 3, 8);
+		    shipObj.fillColor = fleetData.color;
+		    shipObj.strokeColor = fleetData.color;
+		    shipObj.fillColor.alpha = 0.8;
+
+		    var fleet = new StarmapShipController(shipObj, trail);
+		    fleet.isLocal = true;
+		    fleet.data = fleetData;
+
+		    for (var i in this.mapRender.stars) {
+				if (this.mapRender.stars[i].id == fleet.starId) {
+					fleet.orbit(this.mapRender.stars[i].data.pos, 40);
+					fleet.star = this.mapRender.stars[i];
+					break;
+				}
+			}
+
+		    this.mapRender.fleets.push(fleet);
+    	}
 	}
 
 	var starMap = new StarMap();
+
+	starMap.addFleet(<%= JSON.stringify(fleet) %>);
 
 	function onMouseMove(event) {
     }
 
     function onMouseUp(event) {
-	    var star = starMap.hitTest(event.point);
-	    if (star) {
-	    	starMap.selectStar(star);
+	    var gameObj = starMap.hitTest(event.point);
+	    if (gameObj) {
+	    	starMap.selectStar(gameObj);
 	    }
 	}
 
@@ -293,6 +410,10 @@
 			</div>
 		</div>
 	</div>
+</div>
+
+<div style='display: none;'>
+	<!--<img src='<%= config.cdn %>game/starmap/starscape01.jpg'>-->
 </div>
 
 <script>

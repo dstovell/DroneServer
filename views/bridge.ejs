@@ -79,7 +79,9 @@
 
 <script>
 	var config = <%- JSON.stringify(config) %>;
-	var map = <%- JSON.stringify(map) %>;
+	var sector = <%- JSON.stringify(sector) %>;
+	var factionSectors = <%- JSON.stringify(factionSectors) %>;	
+	var fleet = <%- JSON.stringify(fleet) %>;
 
 	var starmapEJS = new EJS({url: '/views/starmap.ejs'});
 
@@ -107,7 +109,8 @@
 
 		if (app == 'starmap') {
 			$('#gameAppScreen').empty();
-			var html = starmapEJS.render({config:config, map:map, appWidth:appWidth, appHeight:appHeight});
+			var html = starmapEJS.render({	config:config, sector:sector, factionSectors:factionSectors, fleet:fleet, 
+											appWidth:appWidth, appHeight:appHeight});
 			$('#gameAppScreen').html( html );
 
 			//window.addEventListener('resize', resizeAllElements, false);
