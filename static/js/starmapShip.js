@@ -28,7 +28,7 @@
 			this.shipObj.rotate(90);
 		}
 
-		this.warp = function(destStar, startPos, endPos, travelTime) {
+		this.warp = function(destStar, startPos, endPos, travelTime, arrivalTime) {
 			if (this.mode == 'warp') {
 				return;
 			}
@@ -38,7 +38,8 @@
 			this.warpEndPos = endPos;
 			this.travelTime = travelTime;
 			this.travelStartTime = new Date().getTime() / 1000;
-			this.travelEndTime = new Date().getTime() / 1000;
+			this.travelStartTime = arrivalTime - travelTime;
+			this.travelEndTime = arrivalTime;
 			this.mode = 'warp';
 		}
 

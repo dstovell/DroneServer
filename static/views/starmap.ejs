@@ -249,8 +249,7 @@
 
 		this.selectStar = function(star) {
 			if (this.selectedStar && this.selectedFleet && (this.selectedFleet.mode == 'orbit')) {
-				var points = getPoints(this.selectedStar.data.pos, star.data.pos, this.starRingRadius);
-				this.selectedFleet.warp(star, points[0], points[1], 5);
+				this.requestWarpFleet(this.selectedFleet, this.selectedStar, star);
 				this.selectedFleet = null;
 				return;
 			}
@@ -322,6 +321,15 @@
 			return hitResult.item.gameObj;
     	}
 
+    	this.getStarById = function(starId) {
+    		for (var i in this.mapRender.stars) {
+				if (this.mapRender.stars[i].data.id == starId) {
+					return this.mapRender.stars[i];
+				}
+			}
+			return null;
+    	}
+
     	this.addFleet = function(fleetData) {
 
 		    var trailSegments = 10;
@@ -344,16 +352,38 @@
 		    fleet.isLocal = true;
 		    fleet.data = fleetData;
 
-		    for (var i in this.mapRender.stars) {
-				if (this.mapRender.stars[i].id == fleet.starId) {
-					fleet.orbit(this.mapRender.stars[i].data.pos, 40);
-					fleet.star = this.mapRender.stars[i];
-					break;
+		    var startStar = this.getStarById(fleetData.starId);
+		    if (startStar) {
+		    	fleet.orbit(startStar.data.pos, 40);
+				fleet.star = startStar;
+		    }
+
+			if (fleetData.dest && fleetData.dest.starId) {
+				var endStar = this.getStarById(fleetData.dest.starId);
+				if (endStar) {
+					var points = getPoints(startStar.data.pos, endStar.data.pos, this.starRingRadius);
+					fleet.warp(endStar, points[0], points[1], fleetData.dest.travelTime, fleetData.dest.arrivalTime);
 				}
 			}
 
 		    this.mapRender.fleets.push(fleet);
     	}
+
+    	this.requestWarpFleet = function(fleet, startStar, endStar) {
+    		var self = this;
+    		var startPos = startStar.data.pos;
+    		var endPos = endStar.data.pos;
+
+			jQuery.post( "/game/bridge/warpfleet", {
+				fleetId:fleet.data._id,
+				sid:this.sid,
+				starId:endStar.data.id
+			},
+			function( updatedFleet ) {
+				var points = getPoints(startPos, endPos, self.starRingRadius);
+				fleet.warp(endStar, points[0], points[1], updatedFleet.dest.travelTime, updatedFleet.dest.arrivalTime);
+			});
+		}
 	}
 
 	var starMap = new StarMap();

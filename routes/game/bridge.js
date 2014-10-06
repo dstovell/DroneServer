@@ -1,4 +1,5 @@
 var express = require('express');
+var ObjectId = require('bson').ObjectId;
 var router = express.Router();
 
 exports = module.exports = function routeSetup(options) {
@@ -114,6 +115,18 @@ exports = module.exports = function routeSetup(options) {
                     res.json(bigBangData);
                 });
             });
+        });
+    });
+
+    router.post('/warpfleet', function(req, res) {
+        var uid = req.cookies.uid;
+        var fleetIdString = req.param("fleetId");
+        var fleetId = new ObjectId( fleetIdString );
+        var sid = parseInt(req.param("sid"));
+        var starId = parseInt(req.param("starId"));
+
+        fleet_controller.warpFleet(uid, fleetId, sid, starId, function (err, updatedFleet) {
+            res.json(updatedFleet);
         });
     });    
 

@@ -15,6 +15,7 @@
         "jade": "*",
         "mongodb": "*",
         "mongoskin": "*",
+        "bson": "*",
 		"ejs": "*",
 		"ejs-locals": "*",
         "express-ejs-layouts": "*",
