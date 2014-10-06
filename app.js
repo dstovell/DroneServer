@@ -54,9 +54,9 @@ options.config = options.config || {
         maxConnectionDistance: 400,
         randomPositionAttempts:400,
         starTypes: [
-            {id:'yellow', name:'Yellow Dwarf', color:'yellow', radius:10, img:'/game/starmap/Sun.png'},
-            {id:'red', name:'Red Giant', color:'red', radius:10, img:'/game/starmap/RedStar.png'},
-            {id:'blue', name:'Blue Giant', color:'blue', radius:10, img:'/game/starmap/BlueStar.png'}
+            {id:'yellow', name:'Yellow Dwarf', color:'yellow', radius:8, img:'/game/starmap/Sun.png'},
+            {id:'red', name:'Red Giant', color:'red', radius:8, img:'/game/starmap/RedStar.png'},
+            {id:'blue', name:'Blue Giant', color:'blue', radius:8, img:'/game/starmap/BlueStar.png'}
         ],
 
         planetTypes: [

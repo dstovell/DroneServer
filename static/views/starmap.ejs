@@ -344,6 +344,7 @@
 			}
 
 			var shipObj = new Path.RegularPolygon(new Point(0, 0), 3, 8);
+			shipObj.strokeWidth = this.linkWidth;
 		    shipObj.fillColor = fleetData.color;
 		    shipObj.strokeColor = fleetData.color;
 		    shipObj.fillColor.alpha = 0.8;
