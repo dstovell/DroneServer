@@ -77,7 +77,7 @@
 			}
 			else if (this.mode == 'warp') {
 				if (this.travelTime != 0) {
-					var currentTime = new Date().getTime() / 1000;
+					var currentTime = getServerTime_s();
 					var t = (currentTime - this.travelStartTime) / this.travelTime;
 					t = Math.min(t, 1.0);
 					var pos = this.interpolate(this.warpStartPos, this.warpEndPos, t);

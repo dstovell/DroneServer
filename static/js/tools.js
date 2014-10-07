@@ -78,4 +78,18 @@ function isStorageAvailable() {
 	}
 }
 
+var serverSyncDeltaTime = 0;
 
+function setServerTime(t) {
+	var currentTime = new Date().getTime();
+	serverSyncDeltaTime = t - currentTime;
+}
+
+function getServerTime_s() {
+	return getServerTime_ms() / 1000;
+}
+
+function getServerTime_ms() {
+	var currentTime = new Date().getTime();
+	return (currentTime + serverSyncDeltaTime);
+}
