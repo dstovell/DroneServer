@@ -81,7 +81,7 @@ exports = module.exports = function routeSetup(options) {
                             var serverTime = new Date().getTime();
              
                             //console.log("sector=" + JSON.stringify(sector));
-                            res.render('bridge', {  config:options.config, layout:'game_layout', serverTime:serverTime,
+                            res.render('bridgenew', {  config:options.config, layout:'game_layout', serverTime:serverTime,
                                                     sector:sector, faction:faction, fleet:fleet, factionSectors:factionSectors });
                         });
                     });

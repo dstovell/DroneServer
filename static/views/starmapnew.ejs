@@ -1,0 +1,446 @@
+<% 	
+	var viewportWidth = appWidth;
+	var viewportHeight = appHeight;
+
+	var map = sector.map;
+%>
+
+<script>
+	function vector2(x, y) {
+		return {x:x, y:y};
+	}
+
+	function diffVector2(v1, v0) {
+		var x = v1.x - v0.x;
+		var y = v1.y - v0.y;
+		return vector2(x, y);
+	}
+
+	function sumVector2(v1, v0) {
+		var x = v1.x + v0.x;
+		var y = v1.y + v0.y;
+		return vector2(x, y);
+	}
+
+	function multVector2(m, v) {
+		var x = m * v.x;
+		var y = m * v.y;
+		return vector2(x, y);
+	}
+
+	function lengthVector2(v) {
+		var lengthSquared = v.x*v.x + v.y*v.y;
+		return Math.sqrt(lengthSquared);
+	}
+
+	function normalizeVector2(v) {
+		var length = lengthVector2(v);
+		var x = v.x / length;
+		var y = v.y / length;
+		return vector2(x, y);
+	}
+</script>
+
+
+<script type="text/paperscript" canvas="star-map-canvas">
+
+	function getStarType(id) {
+		var starTypes = <%= JSON.stringify(config.starmap.starTypes) %>;
+		for (var i in starTypes) {
+			if (starTypes[i].id == id) {
+				return starTypes[i];
+			}
+		}
+		return null;
+	}
+
+	function Star(data, faction, isCapital, fleet, starRingRadius, starInnerRingRadius, linkWidth, useImage, drawImmediately)
+	{
+		this.data = data;
+		this.useImage = useImage;
+		this.starRingRadius = starRingRadius;
+		this.starInnerRingRadius = starInnerRingRadius;
+		this.linkWidth = linkWidth;
+		this.starObj = null;
+		this.ringObjs = [];
+		this.faction = faction;
+		this.isCapital = isCapital;
+		this.fleet = fleet;
+
+		this.data.type = getStarType(data.type);
+
+		this.getFactionColor = function() {
+			return (this.faction != null) ? this.faction.color : 'white';
+		}
+
+		this.getFactionName = function() {
+			return (this.faction != null) ? this.faction.fName : 'none';
+		}
+
+		this.drawStar = function() {
+			if (this.useImage) {
+				this.starObj = new Path.Raster('Sun');
+				/*{
+					image: 'Sun',
+			        center: new Point(data.pos.x, data.pos.y),
+			        radius: data.type.radius
+			    });*/
+
+			    this.starObj.onLoad = function() {
+		            console.log('Successfully loaded image!');
+		        };
+			}
+			else {
+				this.starObj = new Path.Circle({
+			        center: new Point(data.pos.x, data.pos.y),
+			        radius: data.type.radius,
+			        fillColor: data.type.color,
+			        strokeColor: data.type.color
+			    });
+			}
+
+			this.starObj.gameObj = this;
+		}
+
+		this.drawRing = function() {
+			var color = this.getFactionColor();
+
+			var outerRing = new Path.Circle({
+		        center: new Point(data.pos.x, data.pos.y),
+		        radius: this.starRingRadius,
+		        strokeColor: color,
+		        strokeWidth: this.linkWidth
+		    });
+
+		    this.ringObjs.push(outerRing);
+
+		    if (this.isCapital) {
+				this.drawCapitalRing();
+			}
+			else {
+				var innerRing = new Path.Circle({
+			        center: new Point(data.pos.x, data.pos.y),
+			        radius: this.starInnerRingRadius,
+			        strokeColor: color,
+			        strokeWidth: this.linkWidth
+			    });
+
+			    this.ringObjs.push(innerRing);
+			}
+
+		    for (var i in this.ringObjs) {
+		    	this.ringObjs[i].gameObj = this;
+		    }
+		}
+
+		this.drawCapitalRing = function() {
+			var count = 8;
+			var twoPI = 2 * Math.PI;
+			var inc = twoPI / count;
+
+			var color = this.getFactionColor();
+
+			for (var angle=0; angle<twoPI; angle+=inc) {
+				var x = data.pos.x + this.starInnerRingRadius * Math.cos(angle);
+				var y = data.pos.y + this.starInnerRingRadius * Math.sin(angle);
+				var subStar = new Path.Star({
+				    center: [x, y],
+				    points: 5,
+				    radius1: this.linkWidth*2,
+				    radius2: this.linkWidth,
+				    fillColor: color
+				});
+				this.ringObjs.push(subStar);
+			}
+		}
+
+		this.contains = function(point) {
+			if (this.starObj.contains(point)) {
+				return true;
+			}
+			for (var i in this.ringObjs) {
+				if (this.ringObjs[i].contains(point)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		if (drawImmediately) {
+			this.drawStar();
+			this.drawRing();
+		}
+
+		return this;
+	}
+
+	function StarMap(data, useImage, drawImmediately)
+	{
+		var map = <%= JSON.stringify(map) %>;
+		var factionSectors = <%= JSON.stringify(factionSectors) %>;
+
+		this.sid = <%= sector.sid %>;
+		this.linkWidth = 3;
+		this.starRingRadius = 25;
+		this.starInnerRingRadius = 18;
+		this.mapRender = { stars:[], links:[], fleets:[] };
+		this.selectedStar = null;
+		this.selectionCursor = null;
+
+		function getPoints(posA, posB, ringRadius) {
+
+			var dirV = normalizeVector2( diffVector2(posA, posB) );
+			var multiplier = ringRadius;
+		
+			var points = [];
+			points.push( diffVector2(posA, multVector2(multiplier, dirV)) );
+			points.push( sumVector2(posB, multVector2(multiplier, dirV)) );
+			return points;
+		}
+
+		function findOwnerFaction(starId) {
+			for (var i in factionSectors) {
+				if (factionSectors[i].controlled[starId]) {
+					return factionSectors[i];
+				}
+			}
+			return null;
+		}
+
+		function isFactionCapital(starId) {
+			for (var i in factionSectors) {
+				if (factionSectors[i].controlled[starId]) {
+					return factionSectors[i].controlled[starId].capital;
+				}
+			}
+			return false;
+		}
+
+		for (var i in map.links) {
+			var starA_id = map.links[i][0];
+			var starB_id = map.links[i][1];
+			var starA = map.stars[starA_id-1];
+			var starB = map.stars[starB_id-1];
+			var factionA = findOwnerFaction(starA.id);
+			var factionB = findOwnerFaction(starB.id);
+
+			var points = getPoints(starA.pos, starB.pos, this.starRingRadius);
+
+			var color = (factionA && (factionA == factionB)) ? factionA.color : 'white';
+
+			var link = new Path.Line({
+			    from: [points[0].x, points[0].y],
+			    to: [points[1].x, points[1].y],
+			    strokeColor: color,
+			    strokeWidth: this.linkWidth
+			});
+
+			this.mapRender.links.push(link);
+		}
+
+		for (var i in map.stars) {
+			var data = map.stars[i];
+			var faction = findOwnerFaction(data.id);
+			var isCapital = isFactionCapital(data.id);
+
+			var star = new Star(data, faction, isCapital, null, this.starRingRadius, this.starInnerRingRadius, this.linkWidth, false, true);
+		    this.mapRender.stars.push(star);
+		}
+
+		this.selectStar = function(star) {
+			if (this.selectedStar && this.selectedFleet && (this.selectedFleet.mode == 'orbit')) {
+				this.requestWarpFleet(this.selectedFleet, this.selectedStar, star);
+				this.selectedFleet = null;
+				return;
+			}
+			alert("star=" + star.name)
+
+			this.selectedStar = star;
+			var type = star.data.type;
+			//{name:'yellow', color:'yellow', radius:10, img:'/game/starmap/Sun.png'},
+
+			this.selectedFleet = null;
+			for (var i in this.mapRender.fleets) {
+				var fleet = this.mapRender.fleets[i];
+				if ((fleet.star == star) && fleet.isLocal) {
+					this.selectedFleet = fleet;
+					break;
+				}
+			}
+
+			$('#object-details').empty();
+			var html = "";
+			html += "<div class='row'><div class='col-md-12'><img src='" + type.img + "'/></div></div>";
+			html += "<div class='row'><div class='col-md-12'><b>" + star.data.name + "</b></div></div>";
+			html += "<div class='row'><div class='col-md-4'><b>Class:</b></div>";
+			html += "<div class='col-md-8'>" + type.name + "</div></div>";
+			html += "<div class='row'><div class='col-md-4'><b>Faction:</b></div>";
+			html += "<div class='col-md-8'>" + star.getFactionName() + " " + (star.isCapital ? "Capital" : "") + "</div></div>";
+			if (this.selectedFleet) {
+				html += "<div class='row'><div class='col-md-4'><b>Fleet:</b></div>";
+				html += "<div class='col-md-8'>" + this.selectedFleet.data.ships[0] + "</div></div>";
+			}
+			$('#object-details').html( html );
+
+			$('#object-details-panel').removeClass("collapse");
+
+			if (this.selectionCursor == null) {
+				this.selectionCursor = new Path.Circle({
+			        center: new Point(star.data.pos.x, star.data.pos.y),
+			        radius: this.starRingRadius+4,
+			        strokeColor: 'cyan',
+			        strokeWidth: this.linkWidth,
+			        dashArray: [6, 4],
+			    });
+			}
+			else {
+				this.selectionCursor.position = new Point(star.data.pos.x, star.data.pos.y);
+			}
+		}
+
+		this.onFrame = function(event) {
+			if (this.selectionCursor != null) {
+				this.selectionCursor.rotate(1);
+			}
+
+			for (var i in this.mapRender.fleets) {
+				this.mapRender.fleets[i].step();
+			}
+    	}
+
+    	this.hitTest = function(point) {
+    		var hitOptions = {
+				stroke: true,
+				fill: true,
+				tolerance: 10
+			};
+
+    		var hitResult = project.hitTest(point, hitOptions);
+			if (!hitResult || !hitResult.item)
+				return null;
+
+			return hitResult.item.gameObj;
+    	}
+
+    	this.getStarById = function(starId) {
+    		for (var i in this.mapRender.stars) {
+				if (this.mapRender.stars[i].data.id == starId) {
+					return this.mapRender.stars[i];
+				}
+			}
+			return null;
+    	}
+
+    	this.addFleet = function(fleetData) {
+
+		    var trailSegments = 10;
+		    var trail = new Path({
+				strokeColor: fleetData.color,
+				strokeWidth: this.linkWidth*2,
+				strokeCap: 'square'
+			});
+			trail.strokeColor.alpha = 0.5;
+			for (var i = 0; i <= trailSegments; i++) {
+				trail.add(new Point(i , i));
+			}
+
+			var shipObj = new Path.RegularPolygon(new Point(0, 0), 3, 8);
+			shipObj.strokeWidth = this.linkWidth;
+		    shipObj.fillColor = fleetData.color;
+		    shipObj.strokeColor = fleetData.color;
+		    shipObj.fillColor.alpha = 0.8;
+
+		    var fleet = new StarmapShipController(shipObj, trail);
+		    fleet.isLocal = true;
+		    fleet.data = fleetData;
+
+		    var startStar = this.getStarById(fleetData.starId);
+		    if (startStar) {
+		    	fleet.orbit(startStar.data.pos, 40);
+				fleet.star = startStar;
+		    }
+
+			if (fleetData.dest && fleetData.dest.starId) {
+				var endStar = this.getStarById(fleetData.dest.starId);
+				if (endStar) {
+					var points = getPoints(startStar.data.pos, endStar.data.pos, this.starRingRadius);
+					fleet.warp(endStar, points[0], points[1], fleetData.dest.travelTime, fleetData.dest.arrivalTime);
+				}
+			}
+
+		    this.mapRender.fleets.push(fleet);
+    	}
+
+    	this.requestWarpFleet = function(fleet, startStar, endStar) {
+    		var self = this;
+    		var startPos = startStar.data.pos;
+    		var endPos = endStar.data.pos;
+
+			jQuery.post( "/game/bridge/warpfleet", {
+				fleetId:fleet.data._id,
+				sid:this.sid,
+				starId:endStar.data.id
+			},
+			function( updatedFleet ) {
+				var points = getPoints(startPos, endPos, self.starRingRadius);
+				fleet.warp(endStar, points[0], points[1], updatedFleet.dest.travelTime, updatedFleet.dest.arrivalTime);
+			});
+		}
+	}
+
+	var starMap = new StarMap();
+
+	starMap.addFleet(<%= JSON.stringify(fleet) %>);
+
+	function onMouseMove(event) {
+    }
+
+    function onMouseUp(event) {
+	    var gameObj = starMap.hitTest(event.point);
+	    if (gameObj) {
+	    	starMap.selectStar(gameObj);
+	    }
+	}
+
+    // The onFrame function is called up to 60 times a second:
+    function onFrame(event) {
+    	starMap.onFrame(event);
+    }
+
+</script>
+
+
+<div class="row">
+	<div class="col-md-12">
+		<div id="borderBox" class="canvas-viewport" style="width:<%= viewportWidth %>px;height:<%= viewportHeight %>px;">
+			<canvas id="star-map-canvas" width=<%= map.width %> height=<%= map.height %> class="draggable-canvas" keepalive="true">
+			</canvas>
+		</div>
+	</div>
+</div>
+
+<div style='display: none;'>
+	<!--<img src='<%= config.cdn %>game/starmap/starscape01.jpg'>-->
+</div>
+
+<script>
+	console.log("starmapnew");
+	var el = document.getElementById("star-map-canvas");
+	var elementWidth = el ? el.width : 0;
+	var elementHeight = el ? el.height : 0;
+	var leftEdge = <%= viewportWidth %> - elementWidth;
+	var topEdge = <%= viewportHeight %> - elementHeight;
+
+	//function dragObject(element, attachElement, lowerBound, upperBound, dampening, 
+	//					startCallback, moveCallback, endCallback, attachLater)
+	var dragObj = new dragObject(el, null, new Position(leftEdge, topEdge), new Position(0, 0), 1);
+
+	function shutdownApp(app) {
+		if (app == 'starmap') {
+			//alert('shutting down starmap paper=' + paper);
+			//paper.remove();
+			//paper = null;
+			//paper.project.clear();
+		}
+	}
+</script>

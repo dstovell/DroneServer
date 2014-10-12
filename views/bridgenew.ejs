@@ -1,0 +1,134 @@
+<script>
+	//Do this first
+	setServerTime(<%= serverTime %>);
+</script>
+
+
+<%
+	var appList = { 
+		starmap:	{display:'Map', glyph:'glyphicon-map-marker', default:true}, 
+		hanger:		{display:'Hanger', glyph:'glyphicon-plane'}, 
+		trade:		{display:'Trade', glyph:'glyphicon-sort'}, 
+		intel: 		{display:'Intel', glyph:'glyphicon-eye-open'}, 
+		comms: 		{display:'Comms', glyph:'glyphicon-comment'} 
+	};
+%>
+
+<div class="row" style="position:absolute; z-index:2; width:1100px;">
+	<div class="col-md-1"></div>
+	<div class="col-md-10">
+		<div class="panel panel-primary game-ui resize-container" id="appContainer">
+			<div class="panel-heading">
+				<h4 class="panel-title">
+					<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" class="game-ui">
+						<div class="row">
+							<div class="col-md-1">&nbsp;&nbsp;&nbsp;<span class="badge alert-info"><span class="glyphicon glyphicon-align-justify"></span></span></div>
+							<div class="col-md-1">
+								<span class="badge alert-info">
+									<span class="glyphicon glyphicon-user"></span> 
+									<span id="usernameSlot"></span> 
+								</span>
+							</div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-envelope"></span> 7 </span></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-usd"></span> 100000 </span></div>
+							<div class="col-md-1"></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-cog"></span> 4000 </span></div>	
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-tint"></span> 2000 </span></div>
+							<div class="col-md-1"><span class="badge alert-info"><span class="glyphicon glyphicon-tree-conifer"></span> 2000 </span></div>
+
+							<div class="col-md-4"></div>
+						</div>
+					</a>
+				</h4>
+		    </div>
+		    <div id="collapseOne" class="panel-collapse collapse">
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-md-1"></div>
+						<div class="col-md-8">
+							<div class="btn-group">
+								<% for (var app in appList) { %>
+									<a class="btn btn-primary" href="#" onclick="renderApp('<%= app %>')" id="link_<%= app %>">
+										<span class="glyphicon <%= appList[app].glyph %>"></span> <%= appList[app].display %>
+									</a>
+								<% } %>
+								<a class="btn btn-primary" href="#" onclick="logoutUser()" id="link_logout">
+									<span class="glyphicon glyphicon-log-out"></span> Logout
+								</a>
+							</div>
+							<br>
+						</div>
+						<div class="col-md-3"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-1"></div>
+</div>
+
+<div id="gameAppScreen"></div>
+
+<script>
+	var config = <%- JSON.stringify(config) %>;
+	var sector = <%- JSON.stringify(sector) %>;
+	var factionSectors = <%- JSON.stringify(factionSectors) %>;	
+	var fleet = <%- JSON.stringify(fleet) %>;
+
+	var starmapEJS = new EJS({url: '/views/starmapnew.ejs'});
+
+	var currentApp = null;
+
+	var renderApp = function(app) {
+		if (currentApp == app) {
+			return;
+		}
+		else if (currentApp != null) {
+			shutdownApp(currentApp);
+		}
+		currentApp = app;
+
+		//alert('renderApp app=' + app);
+		//Update Button state
+		<% for (var app in appList) { %>
+			$('#link_<%= app %>').removeClass("active");
+		<% } %>
+		$('#link_' + app).addClass( "active");
+
+		var appContainer = document.getElementById("appContainer");
+		var appWidth = window.innerWidth * 1.0;
+		var appHeight = window.innerHeight * 0.9;
+
+		if (app == 'starmap') {
+			$('#gameAppScreen').empty();
+			var html = starmapEJS.render({	config:config, sector:sector, factionSectors:factionSectors, fleet:fleet, 
+											appWidth:appWidth, appHeight:appHeight});
+			$('#gameAppScreen').html( html );
+
+			//window.addEventListener('resize', resizeAllElements, false);
+			//resizeAllElements();
+		}
+		else {
+			$('#gameAppScreen').empty();
+		}
+	}
+
+	$(document).ready(function() {
+		<% 
+			for (var app in appList) { 
+				if (appList[app].default) {
+		%>
+					renderApp('<%= app %>');
+		<% 
+					break;
+				}
+			} 
+		%>
+
+		$('#usernameSlot').html( getUsername() );
+	});
+</script>
+
+<div id="hiddenAssets" style="display: none;">
+
+</div>
