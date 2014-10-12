@@ -72,18 +72,6 @@
 </div>
 
 <script>
-	var el = document.getElementById("star-map-canvas");
-	//var leftEdge = el.parentNode.clientWidth - el.width;
-	//var topEdge = el.parentNode.clientHeight - el.height;
-	var leftEdge = 1000- el.width;
-	var topEdge = 500 - el.height;
-
-	//function dragObject(element, attachElement, lowerBound, upperBound, dampening, 
-	//					startCallback, moveCallback, endCallback, attachLater)
-	var dragObj = new dragObject(el, null, new Position(leftEdge, topEdge), new Position(0, 0), 1);
-</script>
-
-<script>
 	var config = <%- JSON.stringify(config) %>;
 	var sector = <%- JSON.stringify(sector) %>;
 	var factionSectors = <%- JSON.stringify(factionSectors) %>;	
