@@ -150,14 +150,17 @@
 	{
 		eventObj = eventObj ? eventObj : window.event;
 
+		var clientX = eventObj.touches ? eventObj.touches[0].clientX : eventObj.clientX;
+		var clientY = eventObj.touches ? eventObj.touches[0].clientY : eventObj.clientY;
+
 		if(isNaN(window.scrollX))
 		{
-			return new Position(eventObj.clientX + document.documentElement.scrollLeft + document.body.scrollLeft, 
-		  		eventObj.clientY + document.documentElement.scrollTop + document.body.scrollTop);
+			return new Position(clientX + document.documentElement.scrollLeft + document.body.scrollLeft, 
+		  		clientY + document.documentElement.scrollTop + document.body.scrollTop);
 		}
 		else
 		{
-			return new Position(eventObj.clientX + window.scrollX, eventObj.clientY + window.scrollY);
+			return new Position(clientX + window.scrollX, clientY + window.scrollY);
 		}
 	}
 
@@ -190,6 +193,8 @@
 
 			hookEvent(document, "mousemove", dragGo);
 			hookEvent(document, "mouseup", dragStopHook);
+			hookEvent(document, "touchmove", dragGo);
+			hookEvent(document, "touchend", dragStopHook);
 
 			return cancelEvent(eventObj);
 		}
@@ -219,6 +224,8 @@
 			if(!dragging || disposed) return;
 			unhookEvent(document, "mousemove", dragGo);
 			unhookEvent(document, "mouseup", dragStopHook);
+			unhookEvent(document, "touchmove", dragGo);
+			unhookEvent(document, "touchend", dragStopHook);
 			cursorStartPos = null;
 			elementStartPos = null;
 			if(endCallback != null)
@@ -249,12 +256,14 @@
 			if(listening || disposed) return;
 			listening = true;
 			hookEvent(attachElement, "mousedown", dragStart);
+			hookEvent(attachElement, "touchstart", dragStart);
 		}
 
 		this.StopListening = function(stopCurrentDragging)
 		{
 		if(!listening || disposed) return;
 		unhookEvent(attachElement, "mousedown", dragStart);
+		unhookEvent(attachElement, "touchstart", dragStart);
 		listening = false;
 
 		if(stopCurrentDragging && dragging)
