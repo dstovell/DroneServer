@@ -25,7 +25,7 @@
 
 			//make this smater later for smooth transition
 			this.orbitAngle = 0;
-			this.shipObj.rotate(90);
+			this.shipObj.angle = 180;
 		}
 
 		this.warp = function(destStar, startPos, endPos, travelTime, arrivalTime) {
@@ -63,16 +63,19 @@
 				var x = this.orbitTargetPos.x + this.orbitRadius * Math.cos(this.orbitAngle);
 				var y = this.orbitTargetPos.y + this.orbitRadius * Math.sin(this.orbitAngle);
 				
-				this.shipObj.position = {x:x, y:y};
-				this.shipObj.rotate(inc_deg);
+				this.shipObj.x = x;
+				this.shipObj.y = y;
+				this.shipObj.angle += inc_deg;
 
-				for (var i in this.trailObj.segments) {
-					var segmentAngle = this.orbitAngle - parseInt(i)*inc*5;
-					var segment = this.trailObj.segments[i];
-					var x = this.orbitTargetPos.x + this.orbitRadius * Math.cos(segmentAngle);
-					var y = this.orbitTargetPos.y + this.orbitRadius * Math.sin(segmentAngle);
-					segment.point.x = x;
-					segment.point.y = y;
+				if (this.trailObj) {
+					for (var i in this.trailObj.segments) {
+						var segmentAngle = this.orbitAngle - parseInt(i)*inc*5;
+						var segment = this.trailObj.segments[i];
+						var x = this.orbitTargetPos.x + this.orbitRadius * Math.cos(segmentAngle);
+						var y = this.orbitTargetPos.y + this.orbitRadius * Math.sin(segmentAngle);
+						segment.point.x = x;
+						segment.point.y = y;
+					}
 				}
 			}
 			else if (this.mode == 'warp') {
@@ -82,14 +85,17 @@
 					t = Math.min(t, 1.0);
 					var pos = this.interpolate(this.warpStartPos, this.warpEndPos, t);
 
-					this.shipObj.position = {x:pos.x, y:pos.y};
+					this.shipObj.x = x;
+					this.shipObj.y = y;
 
-					for (var i in this.trailObj.segments) {
-						var segmentAngle = this.orbitAngle - parseInt(i)*inc*5;
-						var segment = this.trailObj.segments[i];
-						var seg_pos = this.interpolate(this.warpStartPos, this.warpEndPos, t - (i*0.01));
-						segment.point.x = seg_pos.x;
-						segment.point.y = seg_pos.y;
+					if (this.trailObj) {
+						for (var i in this.trailObj.segments) {
+							var segmentAngle = this.orbitAngle - parseInt(i)*inc*5;
+							var segment = this.trailObj.segments[i];
+							var seg_pos = this.interpolate(this.warpStartPos, this.warpEndPos, t - (i*0.01));
+							segment.point.x = seg_pos.x;
+							segment.point.y = seg_pos.y;
+						}
 					}
 
 					if (t == 1.0) {

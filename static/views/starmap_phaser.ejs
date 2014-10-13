@@ -219,8 +219,6 @@
     		this.graphics.lineTo(points[1].x, points[1].y);
 		}
 
-		//alert("links=" + this.mapRender.links.length);
-
 		for (var i in map.stars) {
 			var data = map.stars[i];
 			var faction = findOwnerFaction(data.id);
@@ -284,7 +282,7 @@
 			}
 		}
 
-		this.onFrame = function(event) {
+		this.update = function() {
 			if (this.selectionCursor != null) {
 				this.selectionCursor.rotate(1);
 			}
@@ -319,8 +317,9 @@
 
     	this.addFleet = function(fleetData) {
 
-		    /*var trailSegments = 10;
-		    var trail = new Path({
+		    var trailSegments = 10;
+		    var trail = null;
+		    /*var trail = new Path({
 				strokeColor: fleetData.color,
 				strokeWidth: this.linkWidth*2,
 				strokeCap: 'square'
@@ -328,19 +327,19 @@
 			trail.strokeColor.alpha = 0.5;
 			for (var i = 0; i <= trailSegments; i++) {
 				trail.add(new Point(i , i));
-			}
+			}*/
 
-			var shipObj = new Path.RegularPolygon(new Point(0, 0), 3, 8);
-			shipObj.strokeWidth = this.linkWidth;
-		    shipObj.fillColor = fleetData.color;
-		    shipObj.strokeColor = fleetData.color;
-		    shipObj.fillColor.alpha = 0.8;
+			var startStar = this.getStarById(fleetData.starId);
+
+			var shipObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, 'cargoship');
+			shipObj.scale.setTo(0.2, 0.2);
+			shipObj.anchor.setTo(0.5, 0.5);
 
 		    var fleet = new StarmapShipController(shipObj, trail);
 		    fleet.isLocal = true;
 		    fleet.data = fleetData;
 
-		    var startStar = this.getStarById(fleetData.starId);
+		    //var startStar = this.getStarById(fleetData.starId);
 		    if (startStar) {
 		    	fleet.orbit(startStar.data.pos, 40);
 				fleet.star = startStar;
@@ -354,7 +353,7 @@
 				}
 			}
 
-		    this.mapRender.fleets.push(fleet);*/
+		    this.mapRender.fleets.push(fleet);
     	}
 
     	this.requestWarpFleet = function(fleet, startStar, endStar) {
@@ -418,7 +417,7 @@
 	        	phaserGame.load.image('<%= starData.id %>', '<%= starData.img %>');
 	        <% } %>
 
-	        phaserGame.load.image('cargoship', '<%= config.cdn %>game/starmap/cargoship.png');
+	        phaserGame.load.image('cargoship', '/game/starmap/cargoship.png');
 	    }
 
 	    function create () {
@@ -481,6 +480,8 @@
 	        else {
 	        	wasTouching = false;
 	        }
+
+	        starMap.update();
 		}
 
 		function render() {
