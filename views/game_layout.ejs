@@ -70,6 +70,7 @@
 	    <script src="/js/bootstrap.min.js"></script>
 
 	    <script src="/js/paper-full.min.js"></script>
+	    <script src="/phaser/2.1.2/phaser.min.js"></script>
 
 	    <script src="/js/ejs_production.js"></script>
 
@@ -206,6 +207,10 @@
 
 			function getUserId() {
 				return getCookie('uid');
+			}
+
+			function refreshPage() {
+				location.reload();
 			}
 
 			$(document).ready(function() {
