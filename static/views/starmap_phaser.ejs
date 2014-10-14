@@ -78,14 +78,21 @@
 			return (this.faction != null) ? this.faction.fName : 'none';
 		}
 
+		function selectStarBridge(item, pointer)
+		{
+			starMap.selectStar(item.gameObject, pointer);
+		}
+
 		this.drawStar = function() {
 			if (this.useImage) {
 				this.starObj = phaserGame.add.sprite(data.pos.x, data.pos.y, data.type.id);
-				this.starObj.scale.setTo(0.1, 0.1);
+				this.starObj.scale.setTo(0.07, 0.07);
 				this.starObj.anchor.setTo(0.5, 0.5);
+				this.starObj.inputEnabled = true;
+				this.starObj.gameObject = this;
+				this.starObj.events.onInputDown.add(selectStarBridge);
 			}
 			else {
-				console.log("data.type.radius=" + data.type.radius);
 			    this.starObj = new Phaser.Circle(data.pos.x, data.pos.y, data.type.radius);
 			    phaserGame.debug.geom(this.starObj, data.type.color);
 			}
@@ -156,11 +163,21 @@
 
 		this.sid = <%= sector.sid %>;
 		this.linkWidth = 3;
-		this.starRingRadius = 40;
-		this.starInnerRingRadius = 33;
+		this.starRingRadius = 30;
+		this.starInnerRingRadius = 23;
+		this.fleetOrbitRadius = 50;
 		this.mapRender = { stars:[], links:[], fleets:[] };
 		this.selectedStar = null;
 		this.selectionCursor = null;
+
+		//Input
+		this.wasTouching = false;
+	    this.lastTouchX = 0;
+	    this.lastTouchY = 0;
+	    this.selectMode = 'select';
+
+	    this.circleMenuItems = [];
+	    this.circleMenuTexts = [];
 
 		this.graphics = phaserGame.add.graphics(0, 0);
 
@@ -193,9 +210,24 @@
 			return false;
 		}
 
+		function isStarsLinked(starA, starB) {
+			for (var i in map.links) {
+				var starA_id = map.links[i][0];
+				var starB_id = map.links[i][1];
+				if ((starA_id == starA.data.id) && (starB_id == starB.data.id)) {
+					return true;
+				}
+				else if ((starA_id == starB.data.id) && (starB_id == starA.data.id)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		for (var i in map.links) {
 			var starA_id = map.links[i][0];
 			var starB_id = map.links[i][1];
+			//Fix these, never rely on id order.
 			var starA = map.stars[starA_id-1];
 			var starB = map.stars[starB_id-1];
 			var factionA = findOwnerFaction(starA.id);
@@ -204,8 +236,6 @@
 			var points = getPoints(starA.pos, starB.pos, this.starRingRadius);
 
 			var color = (factionA && (factionA == factionB)) ? factionA.color : 'FFFFFF';
-
-			console.log("color='" + color + "'");
 
 			/*var link = new Path.Line({
 			    from: [points[0].x, points[0].y],
@@ -231,13 +261,27 @@
 		    this.mapRender.stars.push(star);
 		}
 
-		this.selectStar = function(star) {
-			if (this.selectedStar && this.selectedFleet && (this.selectedFleet.mode == 'orbit')) {
-				this.requestWarpFleet(this.selectedFleet, this.selectedStar, star);
-				this.selectedFleet = null;
+		this.selectStar = function(star, pointer) {
+
+			//Special Select modes
+			if (this.selectMode == 'movefleet') {
+	 			if (this.selectedStar && this.selectedFleet && (this.selectedFleet.mode == 'orbit') && isStarsLinked(this.selectedStar, star)) {
+					this.requestWarpFleet(this.selectedFleet, this.selectedStar, star);
+					this.selectedFleet = null;
+					this.selectMode = 'select';
+					this.closeCircleMenu();
+				}
 				return;
 			}
-			alert("star=" + star.name)
+
+
+			if (this.selectedStar && (this.selectedStar == star)) {
+				this.openCircleMenu(this.selectedStar, this.selectedFleet);
+				return;
+			}
+			this.closeCircleMenu();
+
+			this.moveCameraTo(star.data.pos.x, star.data.pos.y);
 
 			this.selectedStar = star;
 			var type = star.data.type;
@@ -252,7 +296,7 @@
 				}
 			}
 
-			$('#object-details').empty();
+			/*$('#object-details').empty();
 			var html = "";
 			html += "<div class='row'><div class='col-md-12'><img src='" + type.img + "'/></div></div>";
 			html += "<div class='row'><div class='col-md-12'><b>" + star.data.name + "</b></div></div>";
@@ -266,23 +310,103 @@
 			}
 			$('#object-details').html( html );
 
-			$('#object-details-panel').removeClass("collapse");
+			$('#object-details-panel').removeClass("collapse");*/
 
 			if (this.selectionCursor == null) {
-				this.selectionCursor = new Path.Circle({
+				/*this.selectionCursor = new Path.Circle({
 			        center: new Point(star.data.pos.x, star.data.pos.y),
 			        radius: this.starRingRadius+4,
 			        strokeColor: 'cyan',
 			        strokeWidth: this.linkWidth,
 			        dashArray: [6, 4],
-			    });
+			    });*/
 			}
 			else {
-				this.selectionCursor.position = new Point(star.data.pos.x, star.data.pos.y);
+				//this.selectionCursor.position = new Point(star.data.pos.x, star.data.pos.y);
 			}
 		}
 
+		this.addMenuItem = function(text, cb, radius, x, y, finalX, finalY) {
+			var item = phaserGame.add.sprite(x, y, 'circleMenuItem');
+			item.alpha = 0.7;
+			item.scale.setTo(0.001, 0.001);
+			item.anchor.setTo(0.5, 0.5);
+			if (cb) {
+				item.inputEnabled = true;
+				item.events.onInputDown.add(cb);
+			}
+			phaserGame.add.tween(item).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
+			phaserGame.add.tween(item.scale).to({ x:0.5, y:0.5}, 500, Phaser.Easing.Quadratic.InOut, true);
+
+			this.circleMenuItems.push(item);
+
+			var text = phaserGame.add.text(x, y, text, { font: "15px Arial", fill: "#ffffff", align: "center" });
+			text.scale.setTo(0.001, 0.001);
+			text.anchor.setTo(0.5, 0.5);
+			phaserGame.add.tween(text).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
+			phaserGame.add.tween(text.scale).to({ x:1, y:1}, 500, Phaser.Easing.Quadratic.InOut, true);
+
+			this.circleMenuTexts.push(text);
+		}
+
+		function setMoveMode(item, pointer) {
+			item.alpha = 1.0;
+			phaserGame.add.tween(item.scale).to({ x:0.75, y:0.75}, 500, Phaser.Easing.Quadratic.InOut, true);
+			starMap.selectMode = 'movefleet';
+		}
+
+		this.openCircleMenu = function(star, fleet) {
+			if (this.circleMenuItems.length > 0) {
+				return;
+			}
+
+			var menuRadius = 80;
+
+			var maxItems = 8;
+			var twoPI = 2 * Math.PI;
+			var inc = twoPI / maxItems;
+
+			var items = [];
+			items.push({name:'Scan', cb:null});
+			if (fleet) {
+				items.push({name:'Move', cb:setMoveMode});
+				items.push({name:'Dock', cb:null});
+			}
+
+			var angle = Math.PI;
+			for (var i in items) {
+				if (i >= maxItems) { break; }
+				var x = star.data.pos.x + menuRadius * Math.cos(angle);
+				var y = star.data.pos.y + menuRadius * Math.sin(angle);
+				this.addMenuItem(items[i].name, items[i].cb, star.data.radius, star.data.pos.x, star.data.pos.y, x, y);
+				angle+=inc;
+			}
+		}
+
+		this.closeCircleMenu = function() {
+			var self = this;
+			for (var i in this.circleMenuItems) {
+				phaserGame.add.tween(this.circleMenuItems[i].scale).to({ x:0.001, y:0.001}, 500, Phaser.Easing.Quadratic.InOut, true);
+				setTimeout(function(){ self.circleMenuItems[i].kill(); }, 500);	
+			}
+			setTimeout(function(){ self.circleMenuItems = []; }, 600);
+
+			for (var i in this.circleMenuTexts) {
+				this.circleMenuTexts[i].destroy();
+			}
+			this.circleMenuTexts = [];
+		}
+
+		this.moveCameraTo = function(x, y) {
+			var cam = phaserGame.camera;
+  			cam.follow(null);
+  			phaserGame.add.tween(cam).to(	{ x: x - (cam.width / 2), y: y - (cam.height / 2) }, 
+  											750, Phaser.Easing.Quadratic.InOut, true );
+		}
+
 		this.update = function() {
+			this.updateInput();
+
 			if (this.selectionCursor != null) {
 				this.selectionCursor.rotate(1);
 			}
@@ -290,6 +414,34 @@
 			for (var i in this.mapRender.fleets) {
 				this.mapRender.fleets[i].step();
 			}
+    	}
+
+    	this.updateInput = function() {
+    		var touch1 = null;
+	        if (phaserGame.input.mousePointer.isDown) {
+	        	touch1 = phaserGame.input.mousePointer;
+	        }
+	        else if (phaserGame.input.pointer1.isDown) {
+	        	touch1 = phaserGame.input.pointer1;
+	        }
+
+	        if (touch1) {
+	        	if (!this.wasTouching) {
+	        		this.wasTouching = true;
+	        	}
+	        	else {
+	        		var dX = this.lastTouchX - touch1.clientX;
+	        		var dY = this.lastTouchY - touch1.clientY;
+	        		phaserGame.camera.x += dX;
+	        		phaserGame.camera.y += dY;
+	        	}
+
+	        	this.lastTouchX = touch1.clientX;
+	        	this.lastTouchY = touch1.clientY;
+	        }
+	        else {
+	        	this.wasTouching = false;
+	        }
     	}
 
     	this.hitTest = function(point) {
@@ -315,7 +467,7 @@
 			return null;
     	}
 
-    	this.addFleet = function(fleetData) {
+    	this.addFleet = function(fleetData, ship, scale, isLocal) {
 
 		    var trailSegments = 10;
 		    var trail = null;
@@ -331,17 +483,16 @@
 
 			var startStar = this.getStarById(fleetData.starId);
 
-			var shipObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, 'cargoship');
-			shipObj.scale.setTo(0.2, 0.2);
+			var shipObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, ship);
+			shipObj.scale.setTo(scale, scale);
 			shipObj.anchor.setTo(0.5, 0.5);
 
 		    var fleet = new StarmapShipController(shipObj, trail);
-		    fleet.isLocal = true;
+		    fleet.isLocal = isLocal;
 		    fleet.data = fleetData;
 
-		    //var startStar = this.getStarById(fleetData.starId);
 		    if (startStar) {
-		    	fleet.orbit(startStar.data.pos, 40);
+		    	fleet.orbit(startStar.data.pos, this.fleetOrbitRadius);
 				fleet.star = startStar;
 		    }
 
@@ -349,7 +500,9 @@
 				var endStar = this.getStarById(fleetData.dest.starId);
 				if (endStar) {
 					var points = getPoints(startStar.data.pos, endStar.data.pos, this.starRingRadius);
-					fleet.warp(endStar, points[0], points[1], fleetData.dest.travelTime, fleetData.dest.arrivalTime);
+					var dir = diffVector2(endStar.data.pos, startStar.data.pos);
+					var travelAngle = phaserGame.physics.arcade.angleBetween({x:0,y:1}, dir) / (2*Math.PI) * 360;
+					fleet.warp(endStar, points[0], points[1], travelAngle, fleetData.dest.travelTime, fleetData.dest.arrivalTime);
 				}
 			}
 
@@ -368,26 +521,12 @@
 			},
 			function( updatedFleet ) {
 				var points = getPoints(startPos, endPos, self.starRingRadius);
-				fleet.warp(endStar, points[0], points[1], updatedFleet.dest.travelTime, updatedFleet.dest.arrivalTime);
+				var dir = diffVector2(startStar.data.pos, endStar.data.pos);
+				var travelAngle = phaserGame.physics.arcade.angleBetween({x:0,y:1}, dir) / (2*Math.PI) * 360;
+				fleet.warp(endStar, points[0], points[1], travelAngle, updatedFleet.dest.travelTime, updatedFleet.dest.arrivalTime);
 			});
 		}
 	}
-
-	function onMouseMove(event) {
-    }
-
-    function onMouseUp(event) {
-	    var gameObj = starMap.hitTest(event.point);
-	    if (gameObj) {
-	    	starMap.selectStar(gameObj);
-	    }
-	}
-
-    // The onFrame function is called up to 60 times a second:
-    function onFrame(event) {
-    	starMap.onFrame(event);
-    }
-
 </script>
 
 
@@ -418,6 +557,12 @@
 	        <% } %>
 
 	        phaserGame.load.image('cargoship', '/game/starmap/cargoship.png');
+	        phaserGame.load.image('frieghter', '/game/starmap/frieghter.png');
+	        phaserGame.load.image('frigate', '/game/starmap/frigate.png');
+	        phaserGame.load.image('pirateship', '/game/starmap/pirateship.png');
+	        phaserGame.load.image('fedship', '/game/starmap/fedship.png');
+
+	        phaserGame.load.image('circleMenuItem', '/game/starmap/circleMenuItem.png');
 	    }
 
 	    function create () {
@@ -428,14 +573,24 @@
 
 	        starMap = new StarMap();
 
-			starMap.addFleet(<%= JSON.stringify(fleet) %>);
+	        //My fleet
+			starMap.addFleet(<%= JSON.stringify(fleet) %>, 'frieghter', 0.4, true);
 
-			alert("load took " + (new Date().getTime() - startTime) + "ms");
+			for (var i in starMap.mapRender.stars) {
+				var star = starMap.mapRender.stars[i];
+				if (star.isCapital && (star.faction.fName == 'Pirates')) {
+					var data = {sid:0, starId:star.data.id}
+					starMap.addFleet(data, 'pirateship', 0.2, false);
+				}
+				else if (star.isCapital && (star.faction.fName == 'Feds')) {
+					var data = {sid:0, starId:star.data.id}
+					starMap.addFleet(data, 'fedship', 0.5, false);
+				}
+			}
+
+			//alert("load took " + (new Date().getTime() - startTime) + "ms");
 	    }
 
-	    var wasTouching = false;
-	    var lastTouchX = 0;
-	    var lastTouchY = 0;
 	    function update() {
 		    if (cursors.up.isDown)
 	        {
@@ -453,32 +608,6 @@
 	        else if (cursors.right.isDown)
 	        {
 	            phaserGame.camera.x += 4;
-	        }
-
-	        var touch1 = null;
-	        if (phaserGame.input.mousePointer.isDown) {
-	        	touch1 = phaserGame.input.mousePointer;
-	        }
-	        else if (phaserGame.input.pointer1.isDown) {
-	        	touch1 = phaserGame.input.pointer1;
-	        }
-
-	        if (touch1) {
-	        	if (!wasTouching) {
-	        		wasTouching = true;
-	        	}
-	        	else {
-	        		var dX = lastTouchX - touch1.clientX;
-	        		var dY = lastTouchY - touch1.clientY;
-	        		phaserGame.camera.x += dX;
-	        		phaserGame.camera.y += dY;
-	        	}
-
-	        	lastTouchX = touch1.clientX;
-	        	lastTouchY = touch1.clientY;
-	        }
-	        else {
-	        	wasTouching = false;
 	        }
 
 	        starMap.update();
