@@ -5,6 +5,8 @@
 		this.trailObj = trailObj;
 		this.mode = 'none';
 
+		this.initialAngle = 180;
+
 		this.orbitTargetPos = null;
 		this.orbitRadius = 1;
 		this.orbitAngle = 0;
@@ -25,10 +27,10 @@
 
 			//make this smater later for smooth transition
 			this.orbitAngle = 0;
-			this.shipObj.angle = 180;
+			this.shipObj.angle = this.initialAngle;
 		}
 
-		this.warp = function(destStar, startPos, endPos, travelTime, arrivalTime) {
+		this.warp = function(destStar, startPos, endPos, travelAngle, travelTime, arrivalTime) {
 			if (this.mode == 'warp') {
 				return;
 			}
@@ -41,6 +43,8 @@
 			this.travelStartTime = arrivalTime - travelTime;
 			this.travelEndTime = arrivalTime;
 			this.mode = 'warp';
+			
+			this.shipObj.angle = travelAngle + 90 + this.initialAngle;
 		}
 
 		this.step = function() {
@@ -85,8 +89,8 @@
 					t = Math.min(t, 1.0);
 					var pos = this.interpolate(this.warpStartPos, this.warpEndPos, t);
 
-					this.shipObj.x = x;
-					this.shipObj.y = y;
+					this.shipObj.x = pos.x;
+					this.shipObj.y = pos.y;
 
 					if (this.trailObj) {
 						for (var i in this.trailObj.segments) {
