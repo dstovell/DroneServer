@@ -103,15 +103,28 @@
 		this.drawRing = function() {
 			var color = this.getFactionColor();
 
-			this.graphics.lineStyle(this.linkWidth, parseInt(color, 16));
-    		this.graphics.drawCircle(data.pos.x, data.pos.y, this.starRingRadius);
+			var outerRings = drawAASprite(	phaserGame, data.pos.x, data.pos.y, 'gear8', 
+												0.075, color, this, selectStarBridge, true);
+
+			this.ringObjs = this.ringObjs.concat(outerRings);
 
 		    if (this.isCapital) {
 				this.drawCapitalRing();
 			}
 			else {
-				this.graphics.lineStyle(this.linkWidth, parseInt(color, 16));
-    			this.graphics.drawCircle(data.pos.x, data.pos.y, this.starInnerRingRadius);
+				/*var innerRing = phaserGame.add.sprite(data.pos.x, data.pos.y, 'ring');
+				innerRing.scale.setTo(0.05, 0.05);
+				innerRing.anchor.setTo(0.5, 0.5);
+				innerRing.inputEnabled = true;
+				innerRing.gameObject = this;
+				innerRing.events.onInputDown.add(selectStarBridge);
+				innerRing.tint = parseInt(color, 16);*/
+
+				var innerRings = drawAASprite(	phaserGame, data.pos.x, data.pos.y, 'ring', 
+												0.05, color, this, selectStarBridge, true);
+
+				//this.ringObjs.push(innerRing);
+				this.ringObjs = this.ringObjs.concat(innerRings);
 			}
 		}
 
@@ -122,18 +135,26 @@
 
 			var color = this.getFactionColor();
 
-			/*for (var angle=0; angle<twoPI; angle+=inc) {
+			for (var angle=0; angle<twoPI; angle+=inc) {
 				var x = data.pos.x + this.starInnerRingRadius * Math.cos(angle);
 				var y = data.pos.y + this.starInnerRingRadius * Math.sin(angle);
-				var subStar = new Path.Star({
-				    center: [x, y],
-				    points: 5,
-				    radius1: this.linkWidth*2,
-				    radius2: this.linkWidth,
-				    fillColor: color
-				});
+				
+				var subStar = phaserGame.add.sprite(x, y, 'star');
+				subStar.scale.setTo(0.011, 0.011);
+				subStar.anchor.setTo(0.5, 0.5);
+				subStar.inputEnabled = true;
+				subStar.gameObject = this;
+				subStar.events.onInputDown.add(selectStarBridge);
+				subStar.tint = parseInt(color, 16);
+
 				this.ringObjs.push(subStar);
-			}*/
+			}
+		}
+
+		this.selectedUpdate = function() {
+			for (var i in this.ringObjs) {
+				this.ringObjs[i].angle += 1;
+			}
 		}
 
 		this.contains = function(point) {
@@ -166,7 +187,7 @@
 		this.starRingRadius = 30;
 		this.starInnerRingRadius = 23;
 		this.fleetOrbitRadius = 50;
-		this.mapRender = { stars:[], links:[], fleets:[] };
+		this.mapRender = { stars:[], links:[], fleets:[], bases:[] };
 		this.selectedStar = null;
 		this.selectionCursor = null;
 
@@ -326,19 +347,34 @@
 			}
 		}
 
+		function setMoveMode(item, pointer) {
+			//item.alpha = 1.0;
+			phaserGame.add.tween(item).to({ alpha:1.0 }, 300, Phaser.Easing.Quadratic.InOut, true);
+			starMap.selectMode = 'movefleet';
+		}
+
 		this.addMenuItem = function(text, cb, radius, x, y, finalX, finalY) {
-			var item = phaserGame.add.sprite(x, y, 'circleMenuItem');
-			item.alpha = 0.7;
+			var item = phaserGame.add.sprite(x, y, 'hex');
+			var itemOutline = phaserGame.add.sprite(x, y, 'outlineHex');
+			item.alpha = 0.4;
 			item.scale.setTo(0.001, 0.001);
+			itemOutline.scale.setTo(0.001, 0.001);
 			item.anchor.setTo(0.5, 0.5);
+			itemOutline.anchor.setTo(0.5, 0.5);
+			item.tint = 0x2980B9;
+			itemOutline.tint = 0x2980B9;
 			if (cb) {
 				item.inputEnabled = true;
 				item.events.onInputDown.add(cb);
 			}
+
 			phaserGame.add.tween(item).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
-			phaserGame.add.tween(item.scale).to({ x:0.5, y:0.5}, 500, Phaser.Easing.Quadratic.InOut, true);
+			phaserGame.add.tween(item.scale).to({ x:0.06, y:0.06}, 500, Phaser.Easing.Quadratic.InOut, true);
+			phaserGame.add.tween(itemOutline).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
+			phaserGame.add.tween(itemOutline.scale).to({ x:0.06, y:0.06}, 500, Phaser.Easing.Quadratic.InOut, true);
 
 			this.circleMenuItems.push(item);
+			this.circleMenuItems.push(itemOutline);
 
 			var text = phaserGame.add.text(x, y, text, { font: "15px Arial", fill: "#ffffff", align: "center" });
 			text.scale.setTo(0.001, 0.001);
@@ -347,12 +383,6 @@
 			phaserGame.add.tween(text.scale).to({ x:1, y:1}, 500, Phaser.Easing.Quadratic.InOut, true);
 
 			this.circleMenuTexts.push(text);
-		}
-
-		function setMoveMode(item, pointer) {
-			item.alpha = 1.0;
-			phaserGame.add.tween(item.scale).to({ x:0.75, y:0.75}, 500, Phaser.Easing.Quadratic.InOut, true);
-			starMap.selectMode = 'movefleet';
 		}
 
 		this.openCircleMenu = function(star, fleet) {
@@ -407,8 +437,8 @@
 		this.update = function() {
 			this.updateInput();
 
-			if (this.selectionCursor != null) {
-				this.selectionCursor.rotate(1);
+			if (this.selectedStar != null) {
+				this.selectedStar.selectedUpdate();
 			}
 
 			for (var i in this.mapRender.fleets) {
@@ -483,11 +513,25 @@
 
 			var startStar = this.getStarById(fleetData.starId);
 
+			var emitter = null;
+			/*emitter = phaserGame.add.emitter(startStar.data.pos.x, startStar.data.pos.y, 200);
+    		emitter.makeParticles('fade1');
+    		emitter.particleAnchor.y = 0;
+    		emitter.setXSpeed(0, 0);
+    		emitter.setYSpeed(0, 0);
+    		emitter.setRotation(0, 0);
+    		emitter.setScale(0.03, 0.003, 0.03, 0.003, 6000, Phaser.Easing.Quintic.Out);
+    		emitter.gravity = 0;
+    		emitter.alpha = 0.1;
+    		emitter._color = parseInt(fleetData.color, 16);*/
+
 			var shipObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, ship);
 			shipObj.scale.setTo(scale, scale);
-			shipObj.anchor.setTo(0.5, 0.5);
+			shipObj.anchor.setTo(0.5, 0.5);			
 
-		    var fleet = new StarmapShipController(shipObj, trail);
+    		//emitter.start(false, 2000, 10);
+
+		    var fleet = new StarmapShipController(shipObj, emitter, trail);
 		    fleet.isLocal = isLocal;
 		    fleet.data = fleetData;
 
@@ -507,6 +551,15 @@
 			}
 
 		    this.mapRender.fleets.push(fleet);
+    	}
+
+    	this.addBase = function(star) {
+
+			var shipObj = phaserGame.add.sprite(star.data.pos.x, star.data.pos.y, 'starbase01');
+			shipObj.scale.setTo(0.3, 0.3);
+			shipObj.anchor.setTo(0.5, 0.5);
+
+		    this.mapRender.bases.push(fleet);
     	}
 
     	this.requestWarpFleet = function(fleet, startStar, endStar) {
@@ -561,8 +614,19 @@
 	        phaserGame.load.image('frigate', '/game/starmap/frigate.png');
 	        phaserGame.load.image('pirateship', '/game/starmap/pirateship.png');
 	        phaserGame.load.image('fedship', '/game/starmap/fedship.png');
+	        phaserGame.load.image('particle', '/game/starmap/particle.png');
+	        phaserGame.load.image('particle-cloud', '/game/starmap/particle-cloud.png');
+	        phaserGame.load.image('fade1', '/game/starmap/fade1.png');
 
-	        phaserGame.load.image('circleMenuItem', '/game/starmap/circleMenuItem.png');
+	        phaserGame.load.image('starbase01', '/game/starmap/starbase01.png');
+
+			phaserGame.load.image('gear8', '/game/starmap/gear8.png');
+			phaserGame.load.image('ring', '/game/starmap/ring.png');
+			phaserGame.load.image('ringThin', '/game/starmap/ringThin.png');
+			phaserGame.load.image('dashRing5', '/game/starmap/dashRing5.png');
+			phaserGame.load.image('star', '/game/starmap/star.png');
+	        phaserGame.load.image('hex', '/game/starmap/hex.png');
+	        phaserGame.load.image('outlineHex', '/game/starmap/outlineHex.png');
 	    }
 
 	    function create () {
@@ -585,6 +649,7 @@
 				else if (star.isCapital && (star.faction.fName == 'Feds')) {
 					var data = {sid:0, starId:star.data.id}
 					starMap.addFleet(data, 'fedship', 0.5, false);
+					//starMap.addBase(star);
 				}
 			}
 
@@ -594,11 +659,15 @@
 	    function update() {
 		    if (cursors.up.isDown)
 	        {
-	            phaserGame.camera.y -= 4;
+	        	//phaserGame.camera.y -= 4;
+	            phaserGame.camera.scale.x -= 0.01;
+	            phaserGame.camera.scale.y -= 0.01;
 	        }
 	        else if (cursors.down.isDown)
 	        {
-	            phaserGame.camera.y += 4;
+	        	//phaserGame.camera.y += 4;
+	            phaserGame.camera.scale.x += 0.01;
+	            phaserGame.camera.scale.y += 0.01;
 	        }
 
 	        if (cursors.left.isDown)

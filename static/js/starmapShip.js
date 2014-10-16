@@ -1,7 +1,8 @@
 	
-	function StarmapShipController(shipObj, trailObj)
+	function StarmapShipController(shipObj, emitter, trailObj)
 	{
 		this.shipObj = shipObj;
+		this.emitter = emitter;
 		this.trailObj = trailObj;
 		this.mode = 'none';
 
@@ -28,6 +29,12 @@
 			//make this smater later for smooth transition
 			this.orbitAngle = 0;
 			this.shipObj.angle = this.initialAngle;
+
+			if (this.emitter) {
+				this.emitter.forEach(function(particle) {
+	  				particle.kill();
+				});
+			}
 		}
 
 		this.warp = function(destStar, startPos, endPos, travelAngle, travelTime, arrivalTime) {
@@ -45,9 +52,22 @@
 			this.mode = 'warp';
 			
 			this.shipObj.angle = travelAngle + 90 + this.initialAngle;
+
+			if (this.emitter) {
+				this.emitter.forEach(function(particle) {
+	  				particle.kill();
+				});
+			}
 		}
 
 		this.step = function() {
+			if (this.emitter) {
+				this.emitter.forEach(function(particle) {
+	  				// tint every particle cyan
+	  				particle.tint = 0x00ffff;
+				});
+			}
+
 			var currentTime = new Date().getTime();
 			if ((this.nextUpdateTime != 0) && (currentTime < this.nextUpdateTime)) {
 				return false;
@@ -66,10 +86,17 @@
 				}
 				var x = this.orbitTargetPos.x + this.orbitRadius * Math.cos(this.orbitAngle);
 				var y = this.orbitTargetPos.y + this.orbitRadius * Math.sin(this.orbitAngle);
+
+				var eX = this.orbitTargetPos.x + this.orbitRadius * Math.cos(this.orbitAngle-inc_deg*0.2);
+				var eY = this.orbitTargetPos.y + this.orbitRadius * Math.sin(this.orbitAngle-inc_deg*0.2);
 				
 				this.shipObj.x = x;
 				this.shipObj.y = y;
 				this.shipObj.angle += inc_deg;
+				if (this.emitter) {
+					this.emitter.emitX = eX;
+					this.emitter.emitY = eY;
+				}
 
 				if (this.trailObj) {
 					for (var i in this.trailObj.segments) {
@@ -88,9 +115,14 @@
 					var t = (currentTime - this.travelStartTime) / this.travelTime;
 					t = Math.min(t, 1.0);
 					var pos = this.interpolate(this.warpStartPos, this.warpEndPos, t);
+					var ePos = this.interpolate(this.warpStartPos, this.warpEndPos, t-0.1);
 
 					this.shipObj.x = pos.x;
 					this.shipObj.y = pos.y;
+					if (this.emitter) {
+						this.emitter.emitX = ePos.x;
+						this.emitter.emitY = ePos.y;
+					}
 
 					if (this.trailObj) {
 						for (var i in this.trailObj.segments) {
