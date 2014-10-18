@@ -426,7 +426,7 @@
 			return null;
     	}
 
-    	this.addFleet = function(fleetData, ship, scale, isLocal) {
+    	this.addFleet = function(fleetData, ship, scale, shieldScale, isLocal) {
 
 		    var trailSegments = 10;
 		    var trail = null;
@@ -456,11 +456,15 @@
 
 			var shipObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, ship);
 			shipObj.scale.setTo(scale, scale);
-			shipObj.anchor.setTo(0.5, 0.5);			
+			shipObj.anchor.setTo(0.5, 0.5);
+
+			var shieldObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, 'shield');
+			shieldObj.scale.setTo(shieldScale, shieldScale);
+			shieldObj.anchor.setTo(0.5, 0.5);			
 
     		//emitter.start(false, 2000, 10);
 
-		    var fleet = new StarmapShipController(shipObj, emitter, trail);
+		    var fleet = new StarmapShipController(shipObj, shieldObj, emitter, trail);
 		    fleet.isLocal = isLocal;
 		    fleet.data = fleetData;
 
@@ -538,6 +542,8 @@
 	        	phaserGame.load.image('<%= starData.id %>', '<%= starData.img %>');
 	        <% } %>
 
+	        phaserGame.load.image('shield', '/game/starmap/shield.png');
+
 	        phaserGame.load.image('cargoship', '/game/starmap/cargoship.png');
 	        phaserGame.load.image('frieghter', '/game/starmap/frieghter.png');
 	        phaserGame.load.image('frigate', '/game/starmap/frigate.png');
@@ -567,17 +573,17 @@
 	        starMap = new StarMap();
 
 	        //My fleet
-			starMap.addFleet(<%= JSON.stringify(fleet) %>, 'frieghter', 0.4, true);
+			starMap.addFleet(<%= JSON.stringify(fleet) %>, 'frieghter', 0.4, 0.2, true);
 
 			for (var i in starMap.mapRender.stars) {
 				var star = starMap.mapRender.stars[i];
 				if (star.isCapital && (star.faction.fName == 'Pirates')) {
 					var data = {sid:0, starId:star.data.id}
-					starMap.addFleet(data, 'pirateship', 0.2, false);
+					starMap.addFleet(data, 'pirateship', 0.2, 0.15, false);
 				}
 				else if (star.isCapital && (star.faction.fName == 'Feds')) {
 					var data = {sid:0, starId:star.data.id}
-					starMap.addFleet(data, 'fedship', 0.5, false);
+					starMap.addFleet(data, 'fedship', 0.5, 0.25, false);
 					//starMap.addBase(star);
 				}
 			}

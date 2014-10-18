@@ -1,7 +1,8 @@
 	
-	function StarmapShipController(shipObj, emitter, trailObj)
+	function StarmapShipController(shipObj, shieldObj, emitter, trailObj)
 	{
 		this.shipObj = shipObj;
+		this.shieldObj = shieldObj;
 		this.emitter = emitter;
 		this.trailObj = trailObj;
 		this.mode = 'none';
@@ -21,6 +22,10 @@
 		this.nextUpdateTime = 0;
 		this.minUpdateInterval = 33;
 
+		this.setShieldAngle = function(shipAngle) {
+			this.shieldObj.angle = shipAngle +  90;
+		}
+
 		this.orbit = function(targetPos, radius) {
 			this.orbitTargetPos = targetPos;
 			this.orbitRadius = radius;
@@ -29,6 +34,7 @@
 			//make this smater later for smooth transition
 			this.orbitAngle = 0;
 			this.shipObj.angle = this.initialAngle;
+			this.setShieldAngle(this.shipObj.angle);
 
 			if (this.emitter) {
 				this.emitter.forEach(function(particle) {
@@ -52,6 +58,7 @@
 			this.mode = 'warp';
 			
 			this.shipObj.angle = travelAngle + 90 + this.initialAngle;
+			this.setShieldAngle(this.shipObj.angle);
 
 			if (this.emitter) {
 				this.emitter.forEach(function(particle) {
@@ -92,7 +99,10 @@
 				
 				this.shipObj.x = x;
 				this.shipObj.y = y;
+				this.shieldObj.x = x;
+				this.shieldObj.y = y;
 				this.shipObj.angle += inc_deg;
+				this.setShieldAngle(this.shipObj.angle);
 				if (this.emitter) {
 					this.emitter.emitX = eX;
 					this.emitter.emitY = eY;
@@ -119,6 +129,8 @@
 
 					this.shipObj.x = pos.x;
 					this.shipObj.y = pos.y;
+					this.shieldObj.x = pos.x;
+					this.shieldObj.y = pos.y;
 					if (this.emitter) {
 						this.emitter.emitX = ePos.x;
 						this.emitter.emitY = ePos.y;
