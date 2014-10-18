@@ -93,3 +93,37 @@ function getServerTime_ms() {
 	var currentTime = new Date().getTime();
 	return (currentTime + serverSyncDeltaTime);
 }
+
+function vector2(x, y) {
+	return {x:x, y:y};
+}
+
+function diffVector2(v1, v0) {
+	var x = v1.x - v0.x;
+	var y = v1.y - v0.y;
+	return vector2(x, y);
+}
+
+function sumVector2(v1, v0) {
+	var x = v1.x + v0.x;
+	var y = v1.y + v0.y;
+	return vector2(x, y);
+}
+
+function multVector2(m, v) {
+	var x = m * v.x;
+	var y = m * v.y;
+	return vector2(x, y);
+}
+
+function lengthVector2(v) {
+	var lengthSquared = v.x*v.x + v.y*v.y;
+	return Math.sqrt(lengthSquared);
+}
+
+function normalizeVector2(v) {
+	var length = lengthVector2(v);
+	var x = v.x / length;
+	var y = v.y / length;
+	return vector2(x, y);
+}

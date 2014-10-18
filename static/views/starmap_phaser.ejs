@@ -6,43 +6,6 @@
 %>
 
 <script>
-	function vector2(x, y) {
-		return {x:x, y:y};
-	}
-
-	function diffVector2(v1, v0) {
-		var x = v1.x - v0.x;
-		var y = v1.y - v0.y;
-		return vector2(x, y);
-	}
-
-	function sumVector2(v1, v0) {
-		var x = v1.x + v0.x;
-		var y = v1.y + v0.y;
-		return vector2(x, y);
-	}
-
-	function multVector2(m, v) {
-		var x = m * v.x;
-		var y = m * v.y;
-		return vector2(x, y);
-	}
-
-	function lengthVector2(v) {
-		var lengthSquared = v.x*v.x + v.y*v.y;
-		return Math.sqrt(lengthSquared);
-	}
-
-	function normalizeVector2(v) {
-		var length = lengthVector2(v);
-		var x = v.x / length;
-		var y = v.y / length;
-		return vector2(x, y);
-	}
-</script>
-
-
-<script>
 
 	function getStarType(id) {
 		var starTypes = <%= JSON.stringify(config.starmap.starTypes) %>;
@@ -197,8 +160,7 @@
 	    this.lastTouchY = 0;
 	    this.selectMode = 'select';
 
-	    this.circleMenuItems = [];
-	    this.circleMenuTexts = [];
+	    this.circleMenu = null;
 
 		this.graphics = phaserGame.add.graphics(0, 0);
 
@@ -290,17 +252,17 @@
 					this.requestWarpFleet(this.selectedFleet, this.selectedStar, star);
 					this.selectedFleet = null;
 					this.selectMode = 'select';
-					this.closeCircleMenu();
+					this.closeMenu();
 				}
 				return;
 			}
 
 
 			if (this.selectedStar && (this.selectedStar == star)) {
-				this.openCircleMenu(this.selectedStar, this.selectedFleet);
+				this.openMenu(this.selectedStar, this.selectedFleet);
 				return;
 			}
-			this.closeCircleMenu();
+			this.closeMenu();
 
 			this.moveCameraTo(star.data.pos.x, star.data.pos.y);
 
@@ -385,16 +347,10 @@
 			this.circleMenuTexts.push(text);
 		}
 
-		this.openCircleMenu = function(star, fleet) {
-			if (this.circleMenuItems.length > 0) {
+		this.openMenu = function(star, fleet) {
+			if (this.circleMenu != null) {
 				return;
 			}
-
-			var menuRadius = 80;
-
-			var maxItems = 8;
-			var twoPI = 2 * Math.PI;
-			var inc = twoPI / maxItems;
 
 			var items = [];
 			items.push({name:'Scan', cb:null});
@@ -403,28 +359,15 @@
 				items.push({name:'Dock', cb:null});
 			}
 
-			var angle = Math.PI;
-			for (var i in items) {
-				if (i >= maxItems) { break; }
-				var x = star.data.pos.x + menuRadius * Math.cos(angle);
-				var y = star.data.pos.y + menuRadius * Math.sin(angle);
-				this.addMenuItem(items[i].name, items[i].cb, star.data.radius, star.data.pos.x, star.data.pos.y, x, y);
-				angle+=inc;
-			}
+			this.circleMenu = openCircleMenu(phaserGame, star.data.pos.x, star.data.pos.y, items, {});
 		}
 
-		this.closeCircleMenu = function() {
-			var self = this;
-			for (var i in this.circleMenuItems) {
-				phaserGame.add.tween(this.circleMenuItems[i].scale).to({ x:0.001, y:0.001}, 500, Phaser.Easing.Quadratic.InOut, true);
-				setTimeout(function(){ self.circleMenuItems[i].kill(); }, 500);	
+		this.closeMenu = function() {
+			if (this.circleMenu == null) {
+				return;
 			}
-			setTimeout(function(){ self.circleMenuItems = []; }, 600);
-
-			for (var i in this.circleMenuTexts) {
-				this.circleMenuTexts[i].destroy();
-			}
-			this.circleMenuTexts = [];
+			closeCircleMenu(this.circleMenu);
+			this.circleMenu = null;
 		}
 
 		this.moveCameraTo = function(x, y) {
@@ -472,20 +415,6 @@
 	        else {
 	        	this.wasTouching = false;
 	        }
-    	}
-
-    	this.hitTest = function(point) {
-    		var hitOptions = {
-				stroke: true,
-				fill: true,
-				tolerance: 10
-			};
-
-    		var hitResult = project.hitTest(point, hitOptions);
-			if (!hitResult || !hitResult.item)
-				return null;
-
-			return hitResult.item.gameObj;
     	}
 
     	this.getStarById = function(starId) {
