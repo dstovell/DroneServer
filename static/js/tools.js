@@ -121,9 +121,24 @@ function lengthVector2(v) {
 	return Math.sqrt(lengthSquared);
 }
 
+function distanceVector2(v1, v0) {
+	var vDiff = diffVector2(v1, v0);
+	return lengthVector2(vDiff);
+}
+
 function normalizeVector2(v) {
 	var length = lengthVector2(v);
 	var x = v.x / length;
 	var y = v.y / length;
 	return vector2(x, y);
+}
+
+function radiansToDegrees(rad) {
+	var twoPI = 2 * Math.PI;
+	return (rad / twoPI) * 360;
+}
+
+function degreesToRadians(deg) {
+	var twoPI = 2 * Math.PI;
+	return (deg / 360) * twoPI;
 }

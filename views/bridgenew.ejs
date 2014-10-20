@@ -6,11 +6,11 @@
 
 <%
 	var appList = { 
-		starmap:	{display:'Map', glyph:'glyphicon-map-marker', default:true}, 
+		starmap:	{display:'Map', glyph:'glyphicon-map-marker', default:true},
+		sandbox:	{display:'Sandbox', glyph:'glyphicon-inbox'},  
 		hanger:		{display:'Hanger', glyph:'glyphicon-plane'}, 
 		trade:		{display:'Trade', glyph:'glyphicon-sort'}, 
-		intel: 		{display:'Intel', glyph:'glyphicon-eye-open'}, 
-		comms: 		{display:'Comms', glyph:'glyphicon-comment'} 
+		intel: 		{display:'Intel', glyph:'glyphicon-eye-open'}
 	};
 %>
 
@@ -78,6 +78,7 @@
 	var fleet = <%- JSON.stringify(fleet) %>;
 
 	var starmapEJS = new EJS({url: '/views/starmap_phaser.ejs'});
+	var sandboxEJS = new EJS({url: '/views/sandbox_phaser.ejs'});
 
 	var currentApp = null;
 
@@ -86,7 +87,7 @@
 			return;
 		}
 		else if (currentApp != null) {
-			shutdownApp(currentApp);
+			//shutdownApp(currentApp);
 		}
 		currentApp = app;
 
@@ -105,6 +106,14 @@
 			$('#gameAppScreen').empty();
 			var html = starmapEJS.render({	config:config, sector:sector, factionSectors:factionSectors, fleet:fleet, 
 											appWidth:appWidth, appHeight:appHeight});
+			$('#gameAppScreen').html( html );
+
+			//window.addEventListener('resize', resizeAllElements, false);
+			//resizeAllElements();
+		}
+		else if (app == 'sandbox') {
+			$('#gameAppScreen').empty();
+			var html = sandboxEJS.render({	config:config, appWidth:appWidth, appHeight:appHeight});
 			$('#gameAppScreen').html( html );
 
 			//window.addEventListener('resize', resizeAllElements, false);

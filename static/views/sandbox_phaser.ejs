@@ -1,0 +1,144 @@
+<% 	
+	var viewportWidth = appWidth;
+	var viewportHeight = appHeight;
+
+%>
+
+<div class="row">
+	<div class="col-md-12">
+		<div id="starmap-viewport" style="position:relative; width:<%= viewportWidth %>px;height:<%= viewportHeight %>px;">
+		</div>
+	</div>
+</div>
+
+<script>
+	var config = <%= JSON.stringify(config) %>;
+
+	function Sandbox(sizeX, sizeY)
+	{
+		var menuAnchorX = sizeX / 2;
+		var menuAnchorY = sizeY * 0.90;
+		this.spawnButton = addButton(phaserGame, "Spawn", selectSpawnBridge, this, 75, '2980B9', menuAnchorX, menuAnchorY);
+		this.menu = null;
+
+		this.ships = [];
+
+		function selectSpawnBridge(item, pointer)
+		{
+			if (this.menu == null) {
+				var items = [];
+				<% for (var i in config.fleets.baseShips) { 
+					var name = config.fleets.baseShips[i].name;
+					var scale = config.fleets.baseShips[i].scale;
+				%>
+					function spawn<%= name %>(item, pointer) {
+						closeCircleMenu(phaserGame, sandbox.menu);
+						sandbox.menu = null;
+						sandbox.item.alpha = 0.4;
+						sandbox.spawnShip('<%= name %>', <%= scale %>);
+					}
+					items.push({name:'<%= name %>', cb:spawn<%= name %>});
+				<% } %>
+				var options = { menuRadius:150, itemRadius:75, endAngle:2*Math.PI };
+
+				this.menu = openCircleMenu(phaserGame, menuAnchorX, menuAnchorY, items, options);
+				this.item.alpha = 1;
+			}
+			else {
+				closeCircleMenu(phaserGame, this.menu);
+				this.menu = null;
+				this.item.alpha = 0.4;
+			}
+		}
+
+		this.spawnShip = function(name, scale) {
+
+			var data = { name:name, pos:{x:sizeX/2, y:sizeY/2} };
+			var ship = new Ship(config, phaserGame, data);
+
+			this.ships.push(ship);
+		}
+
+		this.update = function() {
+			for (var i in this.ships) {
+				this.ships[i].update();
+			}
+		}
+
+		this.render = function() {
+			for (var i in this.ships) {
+				phaserGame.debug.body(this.ships[i].shipGroup);
+			}
+		}
+	}
+</script>
+
+<script>
+	var phaserGame = null;
+	var sandbox = null;
+
+	$( document ).ready(function() {
+		var startTime = new Date().getTime();
+
+		var transparentBG = true;
+		phaserGame = new Phaser.Game(<%= viewportWidth %>, <%= viewportHeight %>, Phaser.AUTO, 'starmap-viewport', 
+				{ preload: preload,create:create, update:update, render:render }, transparentBG);
+
+	    function preload () {
+	        <% 
+	    	for (var i in config.fleets.baseShips) { 
+	    		var name = config.fleets.baseShips[i].name;
+	    		var img = config.fleets.baseShips[i].img;
+	    	%>
+	        	phaserGame.load.image('<%= name %>', '<%= img %>');
+	        <% } %>
+
+	        phaserGame.load.image('shield', '/game/starmap/shield.png');
+	        phaserGame.load.image('exhaust1', '/game/starmap/exhaust1.png');
+
+	        phaserGame.load.image('starbase01', '/game/starmap/starbase01.png');
+
+	        preloadCircleMenu(phaserGame);
+	    }
+
+	    function create () {
+	    	phaserGame.physics.startSystem(Phaser.Physics.ARCADE);
+	    	//phaserGame.world.setBounds(0, 0, config.starmap.width, config.starmap.height);
+	    	cursors = phaserGame.input.keyboard.createCursorKeys();
+	    	phaserGame.input.addPointer();
+
+	        sandbox = new Sandbox(<%= viewportWidth %>, <%= viewportHeight %>);
+	    }
+
+	    function update() {
+		    if (cursors.up.isDown)
+	        {
+	        	//phaserGame.camera.y -= 4;
+	            phaserGame.camera.scale.x -= 0.01;
+	            phaserGame.camera.scale.y -= 0.01;
+	        }
+	        else if (cursors.down.isDown)
+	        {
+	        	//phaserGame.camera.y += 4;
+	            phaserGame.camera.scale.x += 0.01;
+	            phaserGame.camera.scale.y += 0.01;
+	        }
+
+	        if (cursors.left.isDown)
+	        {
+	            phaserGame.camera.x -= 4;
+	        }
+	        else if (cursors.right.isDown)
+	        {
+	            phaserGame.camera.x += 4;
+	        }
+
+	        sandbox.update();
+		}
+
+		function render() {
+			sandbox.render();
+		}
+
+	});
+</script>

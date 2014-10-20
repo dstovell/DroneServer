@@ -48,46 +48,28 @@
 
 		this.drawStar = function() {
 			if (this.useImage) {
-				this.starObj = phaserGame.add.sprite(data.pos.x, data.pos.y, data.type.id);
-				this.starObj.scale.setTo(0.07, 0.07);
-				this.starObj.anchor.setTo(0.5, 0.5);
-				this.starObj.inputEnabled = true;
-				this.starObj.gameObject = this;
-				this.starObj.events.onInputDown.add(selectStarBridge);
+				this.starObj = drawSprite(phaserGame, data.pos.x, data.pos.y, data.type.id, {scale:0.1, gameObject:this}, selectStarBridge);	
 			}
 			else {
 			    this.starObj = new Phaser.Circle(data.pos.x, data.pos.y, data.type.radius);
+			    this.starObj.gameObject = this;
 			    phaserGame.debug.geom(this.starObj, data.type.color);
 			}
-
-			this.starObj.gameObj = this;
 		}
 
 		this.drawRing = function() {
 			var color = this.getFactionColor();
 
-			var outerRings = drawAASprite(	phaserGame, data.pos.x, data.pos.y, 'gear8', 
-												0.075, color, this, selectStarBridge, true);
-
-			this.ringObjs = this.ringObjs.concat(outerRings);
+			var outerRing = drawSprite(phaserGame, data.pos.x, data.pos.y, 'gear8', {scale:0.075, color:color, gameObject:this}, selectStarBridge);
+			this.ringObjs.push(outerRing);
 
 		    if (this.isCapital) {
 				this.drawCapitalRing();
 			}
 			else {
-				/*var innerRing = phaserGame.add.sprite(data.pos.x, data.pos.y, 'ring');
-				innerRing.scale.setTo(0.05, 0.05);
-				innerRing.anchor.setTo(0.5, 0.5);
-				innerRing.inputEnabled = true;
-				innerRing.gameObject = this;
-				innerRing.events.onInputDown.add(selectStarBridge);
-				innerRing.tint = parseInt(color, 16);*/
 
-				var innerRings = drawAASprite(	phaserGame, data.pos.x, data.pos.y, 'ring', 
-												0.05, color, this, selectStarBridge, true);
-
-				//this.ringObjs.push(innerRing);
-				this.ringObjs = this.ringObjs.concat(innerRings);
+				var innerRing = drawSprite(phaserGame, data.pos.x, data.pos.y, 'ring', {scale:0.05, color:color, gameObject:this}, selectStarBridge);
+				this.ringObjs.push(innerRing);
 			}
 		}
 
@@ -102,14 +84,7 @@
 				var x = data.pos.x + this.starInnerRingRadius * Math.cos(angle);
 				var y = data.pos.y + this.starInnerRingRadius * Math.sin(angle);
 				
-				var subStar = phaserGame.add.sprite(x, y, 'star');
-				subStar.scale.setTo(0.011, 0.011);
-				subStar.anchor.setTo(0.5, 0.5);
-				subStar.inputEnabled = true;
-				subStar.gameObject = this;
-				subStar.events.onInputDown.add(selectStarBridge);
-				subStar.tint = parseInt(color, 16);
-
+				var subStar = drawSprite(phaserGame, x, y, 'star', {scale:0.011, color:color, gameObject:this}, selectStarBridge);
 				this.ringObjs.push(subStar);
 			}
 		}
@@ -316,19 +291,8 @@
 		}
 
 		this.addMenuItem = function(text, cb, radius, x, y, finalX, finalY) {
-			var item = phaserGame.add.sprite(x, y, 'hex');
-			var itemOutline = phaserGame.add.sprite(x, y, 'outlineHex');
-			item.alpha = 0.4;
-			item.scale.setTo(0.001, 0.001);
-			itemOutline.scale.setTo(0.001, 0.001);
-			item.anchor.setTo(0.5, 0.5);
-			itemOutline.anchor.setTo(0.5, 0.5);
-			item.tint = 0x2980B9;
-			itemOutline.tint = 0x2980B9;
-			if (cb) {
-				item.inputEnabled = true;
-				item.events.onInputDown.add(cb);
-			}
+			var item = drawSprite(phaserGame, x, y, 'hex', {scale:0.001, color:'2980B9', alpha:0.4, gameObject:this}, cb);
+			var item = drawSprite(phaserGame, x, y, 'outlineHex', {scale:0.001, color:'2980B9', gameObject:this}, cb);
 
 			phaserGame.add.tween(item).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
 			phaserGame.add.tween(item.scale).to({ x:0.06, y:0.06}, 500, Phaser.Easing.Quadratic.InOut, true);
@@ -366,7 +330,7 @@
 			if (this.circleMenu == null) {
 				return;
 			}
-			closeCircleMenu(this.circleMenu);
+			closeCircleMenu(phaserGame, this.circleMenu);
 			this.circleMenu = null;
 		}
 
@@ -378,7 +342,7 @@
 		}
 
 		this.update = function() {
-			this.updateInput();
+			this.updateInput(phaserGame);
 
 			if (this.selectedStar != null) {
 				this.selectedStar.selectedUpdate();
@@ -389,13 +353,17 @@
 			}
     	}
 
-    	this.updateInput = function() {
+    	this.updateInput = function(pgame) {
+    		if (!pgame) {
+    			return;
+    		}
+
     		var touch1 = null;
-	        if (phaserGame.input.mousePointer.isDown) {
-	        	touch1 = phaserGame.input.mousePointer;
+	        if (pgame.input.mousePointer.isDown) {
+	        	touch1 = pgame.input.mousePointer;
 	        }
-	        else if (phaserGame.input.pointer1.isDown) {
-	        	touch1 = phaserGame.input.pointer1;
+	        else if (pgame.input.pointer1.isDown) {
+	        	touch1 = pgame.input.pointer1;
 	        }
 
 	        if (touch1) {
@@ -405,8 +373,8 @@
 	        	else {
 	        		var dX = this.lastTouchX - touch1.clientX;
 	        		var dY = this.lastTouchY - touch1.clientY;
-	        		phaserGame.camera.x += dX;
-	        		phaserGame.camera.y += dY;
+	        		pgame.camera.x += dX;
+	        		pgame.camera.y += dY;
 	        	}
 
 	        	this.lastTouchX = touch1.clientX;
@@ -454,13 +422,12 @@
     		emitter.alpha = 0.1;
     		emitter._color = parseInt(fleetData.color, 16);*/
 
-			var shipObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, ship);
-			shipObj.scale.setTo(scale, scale);
-			shipObj.anchor.setTo(0.5, 0.5);
+    		var shipObj = drawSprite(phaserGame, startStar.data.pos.x, startStar.data.pos.y, ship, {scale:scale});
 
-			var shieldObj = phaserGame.add.sprite(startStar.data.pos.x, startStar.data.pos.y, 'shield');
-			shieldObj.scale.setTo(shieldScale, shieldScale);
-			shieldObj.anchor.setTo(0.5, 0.5);			
+			var shieldObj = null;
+			if (true) {
+				shieldObj = drawSprite(phaserGame, startStar.data.pos.x, startStar.data.pos.y, 'shield', {scale:shieldScale});		
+			}
 
     		//emitter.start(false, 2000, 10);
 
@@ -487,12 +454,8 @@
     	}
 
     	this.addBase = function(star) {
-
-			var shipObj = phaserGame.add.sprite(star.data.pos.x, star.data.pos.y, 'starbase01');
-			shipObj.scale.setTo(0.3, 0.3);
-			shipObj.anchor.setTo(0.5, 0.5);
-
-		    this.mapRender.bases.push(fleet);
+    		var baseObj = drawSprite(phaserGame, startStar.data.pos.x, startStar.data.pos.y, 'starbase01', {scale:0.3});
+		    this.mapRender.bases.push(baseObj);
     	}
 
     	this.requestWarpFleet = function(fleet, startStar, endStar) {
@@ -573,17 +536,17 @@
 	        starMap = new StarMap();
 
 	        //My fleet
-			starMap.addFleet(<%= JSON.stringify(fleet) %>, 'frieghter', 0.4, 0.2, true);
+			starMap.addFleet(<%= JSON.stringify(fleet) %>, 'frieghter', 0.4, 0.6, true);
 
 			for (var i in starMap.mapRender.stars) {
 				var star = starMap.mapRender.stars[i];
 				if (star.isCapital && (star.faction.fName == 'Pirates')) {
 					var data = {sid:0, starId:star.data.id}
-					starMap.addFleet(data, 'pirateship', 0.2, 0.15, false);
+					starMap.addFleet(data, 'pirateship', 0.4, 0.6, false);
 				}
 				else if (star.isCapital && (star.faction.fName == 'Feds')) {
 					var data = {sid:0, starId:star.data.id}
-					starMap.addFleet(data, 'fedship', 0.5, 0.25, false);
+					starMap.addFleet(data, 'fedship', 0.4, 0.6, false);
 					//starMap.addBase(star);
 				}
 			}
@@ -624,4 +587,8 @@
 		}
 
 	}
+
+	window.onunload = function() {
+       console.log("onunload");
+    }
 </script>
