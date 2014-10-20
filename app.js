@@ -9,7 +9,8 @@ var bodyParser = require('body-parser');
 var flash = require('connect-flash');
 // Database
 var mongo = require('mongoskin');
-var db = mongo.db(process.env.MONGO_URL || "mongodb://localhost:27017/DroneServer", { native_parser: true });
+var defaultMongoServer = (process.env.NODE_ENV == 'development') ? "mongodb://localhost:27017/DroneServer" : "mongodb://droneadmin:droneadmin1234@proximus.modulusmongo.net:27017/qI7taqes";
+var db = mongo.db(process.env.MONGO_URL || defaultMongoServer, { native_parser: true });
 
 
 function printTitle() {
