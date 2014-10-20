@@ -34,7 +34,8 @@
 					function spawn<%= name %>(item, pointer) {
 						closeCircleMenu(phaserGame, sandbox.menu);
 						sandbox.menu = null;
-						sandbox.item.alpha = 0.4;
+						setButtonSelected(sandbox.spawnButton, false);
+						sandbox.spawnButton.itemalpha = 0.4;
 						sandbox.spawnShip('<%= name %>', <%= scale %>);
 					}
 					items.push({name:'<%= name %>', cb:spawn<%= name %>});
@@ -42,7 +43,7 @@
 				var options = { menuRadius:150, itemRadius:75, endAngle:2*Math.PI };
 
 				this.menu = openCircleMenu(phaserGame, menuAnchorX, menuAnchorY, items, options);
-				this.item.alpha = 1;
+				setButtonSelected(sandbox.spawnButton, true);
 			}
 			else {
 				closeCircleMenu(phaserGame, this.menu);

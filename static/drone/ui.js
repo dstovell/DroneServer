@@ -107,6 +107,10 @@ function addButton(pgame, text, cb, ctx, radius, color, x, y) {
 	return button;
 }
 
+function setButtonSelected(button, selected) {
+	var a = selected ? 1.0 : 0.4;
+	button.items[0].alpha = a;
+}
 
 function moveCameraTo(pgame, x, y) {
 	var cam = pgame.camera;
