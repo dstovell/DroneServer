@@ -54,7 +54,7 @@
 
 		this.spawnShip = function(name, scale) {
 
-			var data = { name:name, pos:{x:sizeX/2, y:sizeY/2} };
+			var data = { name:name, pos:{x:sizeX/2, y:sizeY/2}, selectable:true };
 			var ship = new Ship(config, phaserGame, data);
 
 			this.ships.push(ship);
@@ -68,7 +68,7 @@
 
 		this.render = function() {
 			for (var i in this.ships) {
-				phaserGame.debug.body(this.ships[i].shipGroup);
+				this.ships[i].render();
 			}
 		}
 	}

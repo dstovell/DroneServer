@@ -142,3 +142,7 @@ function degreesToRadians(deg) {
 	var twoPI = 2 * Math.PI;
 	return (deg / 360) * twoPI;
 }
+
+function randomRange(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
