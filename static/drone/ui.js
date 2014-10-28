@@ -118,3 +118,62 @@ function moveCameraTo(pgame, x, y) {
 	pgame.add.tween(cam).to(	{ x: x - (cam.width / 2), y: y - (cam.height / 2) }, 
 								750, Phaser.Easing.Quadratic.InOut, true );
 }
+
+function updateDragCamera(pgame, obj) {
+	if (!pgame) {
+		return;
+	}
+
+	if (obj._wasTouching) {
+		pgame.camera.x += obj._dX;
+   		pgame.camera.y += obj._dY;
+   	}
+}
+
+/*function updateDragPath(pgame, obj) {
+	var dragPathSegmentDistance = 6;
+
+	pgame.camera.x += obj._dX;
+   	pgame.camera.y += obj._dY;
+}*/
+
+function updateDrag(pgame, obj) {
+	if (!pgame) {
+		return;
+	}
+
+	var touch1 = null;
+    if (pgame.input.mousePointer.isDown) {
+    	touch1 = pgame.input.mousePointer;
+    }
+    else if (pgame.input.pointer1.isDown) {
+    	touch1 = pgame.input.pointer1;
+    }
+
+    if (touch1) {
+    	if (!obj._wasTouching) {
+    		obj._wasTouching = true;
+    		obj._dX = 0;
+    		obj._dY = 0;
+    	}
+    	else {
+    		obj._dX = obj._lastTouchX - touch1.clientX;
+    		obj._dY = obj._lastTouchY - touch1.clientY;
+    	}
+
+    	obj._lastTouchX = touch1.clientX;
+    	obj._lastTouchY = touch1.clientY;
+    	//return {x:obj._lastTouchX, y:obj._lastTouchY, dX:obj._dX, dY:obj._dY};
+    }
+    else {
+    	obj._wasTouching = false;
+    	obj._dX = 0;
+    	obj._dY = 0;
+    }
+
+    return;
+}
+
+function updateUiInput(pgame, obj) {
+	updateDrag(pgame, obj);
+}

@@ -354,35 +354,8 @@
     	}
 
     	this.updateInput = function(pgame) {
-    		if (!pgame) {
-    			return;
-    		}
-
-    		var touch1 = null;
-	        if (pgame.input.mousePointer.isDown) {
-	        	touch1 = pgame.input.mousePointer;
-	        }
-	        else if (pgame.input.pointer1.isDown) {
-	        	touch1 = pgame.input.pointer1;
-	        }
-
-	        if (touch1) {
-	        	if (!this.wasTouching) {
-	        		this.wasTouching = true;
-	        	}
-	        	else {
-	        		var dX = this.lastTouchX - touch1.clientX;
-	        		var dY = this.lastTouchY - touch1.clientY;
-	        		pgame.camera.x += dX;
-	        		pgame.camera.y += dY;
-	        	}
-
-	        	this.lastTouchX = touch1.clientX;
-	        	this.lastTouchY = touch1.clientY;
-	        }
-	        else {
-	        	this.wasTouching = false;
-	        }
+    		updateUiInput(pgame, this);
+    		updateDragCamera(pgame, this);
     	}
 
     	this.getStarById = function(starId) {
