@@ -18,7 +18,7 @@
 	{
 		var menuAnchorX = sizeX / 2;
 		var menuAnchorY = sizeY * 0.90;
-		this.spawnButton = addButton(phaserGame, "Spawn", selectSpawnBridge, this, 75, '2980B9', menuAnchorX, menuAnchorY);
+		this.spawnButton = addButton(phaserGame, "Spawn", selectSpawnBridge, this, 75, '2980B9', menuAnchorX, menuAnchorY, {fixedToCamera:true});
 		this.menu = null;
 
 		this.ships = [];
@@ -40,7 +40,7 @@
 					}
 					items.push({name:'<%= name %>', cb:spawn<%= name %>});
 				<% } %>
-				var options = { menuRadius:150, itemRadius:75, endAngle:2*Math.PI };
+				var options = { menuRadius:150, itemRadius:75, endAngle:2*Math.PI, fixedToCamera:true };
 
 				this.menu = openCircleMenu(phaserGame, menuAnchorX, menuAnchorY, items, options);
 				setButtonSelected(sandbox.spawnButton, true);
@@ -48,7 +48,7 @@
 			else {
 				closeCircleMenu(phaserGame, this.menu);
 				this.menu = null;
-				this.item.alpha = 0.4;
+				setButtonSelected(sandbox.spawnButton, false);
 			}
 		}
 
@@ -61,6 +61,8 @@
 		}
 
 		this.update = function() {
+			this.updateInput(phaserGame);
+
 			for (var i in this.ships) {
 				this.ships[i].update();
 			}
@@ -71,6 +73,11 @@
 				this.ships[i].render();
 			}
 		}
+
+		this.updateInput = function(pgame) {
+    		updateUiInput(pgame, this);
+    		updateDragCamera(pgame, this);
+    	}
 	}
 </script>
 
@@ -104,7 +111,7 @@
 
 	    function create () {
 	    	phaserGame.physics.startSystem(Phaser.Physics.ARCADE);
-	    	//phaserGame.world.setBounds(0, 0, config.starmap.width, config.starmap.height);
+	    	phaserGame.world.setBounds(0, 0, config.sandbox.width, config.sandbox.height);
 	    	cursors = phaserGame.input.keyboard.createCursorKeys();
 	    	phaserGame.input.addPointer();
 

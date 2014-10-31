@@ -15,6 +15,7 @@ function openCircleMenu(pgame, startX, startY, items, options) {
 	options.startAngle = options.startAngle || Math.PI;
 	options.endAngle = options.endAngle || (options.startAngle + twoPI);
 	options.color = options.color || 0x2980B9;
+	options.fixedToCamera = options.fixedToCamera || false;
 	
 	var inc = twoPI / options.maxItems;
 
@@ -28,7 +29,8 @@ function openCircleMenu(pgame, startX, startY, items, options) {
 		if (angle >= options.endAngle) { radius += options.menuRadialSpace; angle = options.startAngle; countThisRow = 0; inc /= 2;}
 		var x = startX + radius * Math.cos(angle);
 		var y = startY + radius * Math.sin(angle);
-		menu = addCircleMenuItem(pgame, menu, items[i].name, items[i].cb, items[i].ctx, options.itemRadius, options.color, startX, startY, x, y);
+		menu = addCircleMenuItem(pgame, menu, items[i].name, items[i].cb, items[i].ctx, options.itemRadius, options.color, startX, startY, x, y, options.fixedToCamera);
+
 		angle+=inc;
 		countThisRow++;
 	}
@@ -49,7 +51,20 @@ function closeCircleMenu(pgame, menu, closedCB) {
 	menu.circleMenuTexts = [];
 }
 
-function addCircleMenuItem(pgame, menu, text,  cb, ctx, radius, color, x, y, finalX, finalY) {
+function tweenCircleMenuItem(pgame, sprite, x, y, finalX, finalY, scale, fixedToCamera) {
+	if (fixedToCamera) {
+		sprite.fixedToCamera = true;
+		sprite.cameraOffset.setTo(x, y);
+		pgame.add.tween(sprite.cameraOffset).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
+	}
+	else {
+		pgame.add.tween(sprite).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
+	}
+
+	pgame.add.tween(sprite.scale).to({ x:scale, y:scale}, 500, Phaser.Easing.Quadratic.InOut, true);
+}
+
+function addCircleMenuItem(pgame, menu, text,  cb, ctx, radius, color, x, y, finalX, finalY, fixedToCamera) {
 	var item = pgame.add.sprite(x, y, 'hex');
 	var itemOutline = pgame.add.sprite(x, y, 'outlineHex');
 	item.alpha = 0.4;
@@ -67,10 +82,8 @@ function addCircleMenuItem(pgame, menu, text,  cb, ctx, radius, color, x, y, fin
 	var subScale = radius / 40;
 
 	//This needs to take radius into account
-	pgame.add.tween(item).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
-	pgame.add.tween(item.scale).to({ x:0.06*subScale, y:0.06*subScale}, 500, Phaser.Easing.Quadratic.InOut, true);
-	pgame.add.tween(itemOutline).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
-	pgame.add.tween(itemOutline.scale).to({ x:0.06*subScale, y:0.06*subScale}, 500, Phaser.Easing.Quadratic.InOut, true);
+	tweenCircleMenuItem(pgame, item, x, y, finalX, finalY, 0.06*subScale, fixedToCamera);
+	tweenCircleMenuItem(pgame, itemOutline, x, y, finalX, finalY, 0.06*subScale, fixedToCamera);
 
 	menu.circleMenuItems.push(item);
 	menu.circleMenuItems.push(itemOutline);
@@ -79,17 +92,21 @@ function addCircleMenuItem(pgame, menu, text,  cb, ctx, radius, color, x, y, fin
 	var text = pgame.add.text(x, y, text, { font: "15px Arial", fill: "#ffffff", align: "center" });
 	text.scale.setTo(0.001, 0.001);
 	text.anchor.setTo(0.5, 0.5);
-	pgame.add.tween(text).to({ x:finalX, y:finalY }, 500, Phaser.Easing.Quadratic.InOut, true);
-	pgame.add.tween(text.scale).to({ x:1, y:1}, 500, Phaser.Easing.Quadratic.InOut, true);
+
+	tweenCircleMenuItem(pgame, text, x, y, finalX, finalY, 1, fixedToCamera);
 
 	menu.circleMenuTexts.push(text);
 
 	return menu;
 }
 
-function addButton(pgame, text, cb, ctx, radius, color, x, y) {
+function addButton(pgame, text, cb, ctx, radius, color, x, y, options) {
 	var button = {items:[], texts:[]};
 	var scale = radius / 40;
+
+	options = options || {};
+
+	options.fixedToCamera = options.fixedToCamera || false;
 
 	var item = drawSprite(pgame, x, y, 'hex', {scale:0.06*scale, color:color, alpha:0.4, gameObject:ctx}, cb);
 	var itemOutline = drawSprite(pgame, x, y, 'outlineHex', {scale:0.06*scale, color:color, gameObject:ctx}, cb);
@@ -103,6 +120,18 @@ function addButton(pgame, text, cb, ctx, radius, color, x, y) {
 	text.anchor.setTo(0.5, 0.5);
 
 	button.texts.push(text);
+
+	if (options.fixedToCamera) {
+		for (var i in button.items) {
+			button.items[i].fixedToCamera = true;
+			button.items[i].cameraOffset.setTo(x, y);
+		}
+
+		for (var i in button.texts) {
+			button.texts[i].fixedToCamera = true;
+			button.texts[i].cameraOffset.setTo(x, y);
+		}
+	}
 
 	return button;
 }

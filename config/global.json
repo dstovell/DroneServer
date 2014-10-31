@@ -56,6 +56,11 @@
             { "name":"Carrier",       "warp":4, "holds":80,   "drones":10000, "hull":750,     "shields":750,    "odds":1.6,   "cost":190236,      "img":"/game/starmap/carrier.png",    "scale":1}
             
         ]
+    },
+
+    "sandbox": {
+        "width": 2048,
+        "height": 2048
     }
 }
 
