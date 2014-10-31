@@ -84,6 +84,7 @@
 <script>
 	var phaserGame = null;
 	var sandbox = null;
+	var spacedust = null;
 
 	$( document ).ready(function() {
 		var startTime = new Date().getTime();
@@ -104,7 +105,7 @@
 	        phaserGame.load.image('shield', '/game/starmap/shield.png');
 	        phaserGame.load.image('exhaust1', '/game/starmap/exhaust1.png');
 
-	        phaserGame.load.image('starbase01', '/game/starmap/starbase01.png');
+	        phaserGame.load.image('spacedust', '/game/starmap/asfalt-light.png');
 
 	        preloadCircleMenu(phaserGame);
 	    }
@@ -112,6 +113,7 @@
 	    function create () {
 	    	phaserGame.physics.startSystem(Phaser.Physics.ARCADE);
 	    	phaserGame.world.setBounds(0, 0, config.sandbox.width, config.sandbox.height);
+	    	spacedust = phaserGame.add.tileSprite(0, 0, config.sandbox.width, config.sandbox.height, 'spacedust');
 	    	cursors = phaserGame.input.keyboard.createCursorKeys();
 	    	phaserGame.input.addPointer();
 
