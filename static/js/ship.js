@@ -28,6 +28,7 @@ function Ship(config, pgame, data)
 	this.drones = [];
 
 	this.moveTarget = null;
+	this.moveQueue = [];
 	this.followTarget = null;
 
 	this.shieldUp = false;
@@ -176,6 +177,15 @@ function Ship(config, pgame, data)
 		this.followTarget = ship;
 	}
 
+	this.movePath = function(moves, removeExisting) {
+		if (removeExisting) {
+			this.moveQueue  = [];
+		}
+		for (var i in moves) {
+			this.moveQueue.push( moves[i] );
+		}
+	}
+
 	this.moveTo = function(x, y) {
 		var pos = this.getPosition();
 		var line = new Phaser.Line(pos.x, pos.y, x, y);
@@ -189,6 +199,11 @@ function Ship(config, pgame, data)
 	this.stop = function() {
 		//this.shipGroup.setAll('body.velocity.x', 0);
         //this.shipGroup.setAll('body.velocity.y', 0);
+	}
+
+	this.hasReached = function(pos) {
+		var dist = this.distanceTo(pos);
+		return (dist < 2.0);
 	}
 
 	this.update = function() {
@@ -205,6 +220,12 @@ function Ship(config, pgame, data)
 				this.moveTarget = {x:touch1.clientX, y:touch1.clientY};
 				this.menuMode = 'none';
     		}
+		}
+
+		if ((this.moveTarget == null) || this.hasReached(this.moveTarget)) {
+			if (this.moveQueue.length > 0) {
+				this.moveTarget = this.moveQueue.shift();
+			}
 		}
 
 		if (this.moveTarget) {

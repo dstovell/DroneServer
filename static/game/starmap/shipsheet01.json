@@ -1,0 +1,147 @@
+{"frames": [
+
+{
+	"filename": "a10000.png",
+	"frame": {"x":2,"y":741,"w":60,"h":56},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":32,"y":31,"w":60,"h":56},
+	"sourceSize": {"w":120,"h":120},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "a30000.png",
+	"frame": {"x":60,"y":741,"w":60,"h":56},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":32,"y":31,"w":60,"h":56},
+	"sourceSize": {"w":120,"h":120},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "a40000.png",
+	"frame": {"x":61,"y":677,"w":60,"h":56},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":32,"y":31,"w":60,"h":56},
+	"sourceSize": {"w":120,"h":120},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "b40000.png",
+	"frame": {"x":119,"y":677,"w":58,"h":54},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":29,"y":34,"w":58,"h":54},
+	"sourceSize": {"w":120,"h":120},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "c10000.png",
+	"frame": {"x":2,"y":677,"w":62,"h":57},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":32,"y":30,"w":62,"h":57},
+	"sourceSize": {"w":120,"h":120},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "cargoship.png",
+	"frame": {"x":2,"y":545,"w":130,"h":232},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":4,"y":13,"w":130,"h":232},
+	"sourceSize": {"w":138,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "carrier.png",
+	"frame": {"x":2,"y":178,"w":256,"h":111},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":111},
+	"sourceSize": {"w":256,"h":111},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "corvette.png",
+	"frame": {"x":260,"y":2,"w":247,"h":176},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":5,"w":247,"h":176},
+	"sourceSize": {"w":256,"h":186},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "d10000.png",
+	"frame": {"x":2,"y":807,"w":65,"h":58},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":30,"y":30,"w":65,"h":58},
+	"sourceSize": {"w":120,"h":120},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "destroyer.png",
+	"frame": {"x":236,"y":647,"w":158,"h":220},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":19,"y":15,"w":158,"h":220},
+	"sourceSize": {"w":187,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "fedship.png",
+	"frame": {"x":2,"y":291,"w":115,"h":239},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":10,"y":4,"w":115,"h":239},
+	"sourceSize": {"w":135,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "frieghter.png",
+	"frame": {"x":2,"y":408,"w":135,"h":234},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":16,"y":9,"w":135,"h":234},
+	"sourceSize": {"w":167,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "frigate.png",
+	"frame": {"x":2,"y":2,"w":174,"h":256},
+	"rotated": true,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":174,"h":256},
+	"sourceSize": {"w":174,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "pirateship.png",
+	"frame": {"x":238,"y":423,"w":222,"h":232},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":6,"y":22,"w":222,"h":232},
+	"sourceSize": {"w":229,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "shield.png",
+	"frame": {"x":260,"y":180,"w":241,"h":241},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":8,"y":8,"w":241,"h":241},
+	"sourceSize": {"w":253,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "shipsheet01.png",
+	"format": "RGBA8888",
+	"size": {"w":512,"h":1024},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:f5ecd14c852d22ffbf8f7ad800f0b613:51a5a8157fd584f1228db8e66a4e1456:a0ac177f39cc422f28ee1a65ccebab40$"
+}
+}
