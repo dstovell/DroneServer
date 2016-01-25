@@ -1,5 +1,5 @@
 html { 
-	background: url(http://dl.dropboxusercontent.com/u/8864550/DroneServer/game/starmap/starscape05.jpg) no-repeat center center fixed; 
+	
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
@@ -7,7 +7,7 @@ html {
 }
 
 .star-map-bg { 
-	background: url(http://dl.dropboxusercontent.com/u/8864550/DroneServer/game/starmap/starscape05.jpg) no-repeat center center fixed; 
+
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
