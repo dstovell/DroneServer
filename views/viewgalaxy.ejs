@@ -33,18 +33,23 @@
 		}
 
 		this.bvToRgb = <%- helper.bvToRgb %>;
-		this.rgbToHex = <%- helper.rgbToHex %>;
-		this.bvToHex = <%- helper.bvToHex %>;
+		
+		this.bvToPhaserColor = function(bv) {
+			var color = this.bvToRgb(bv);
+			return "'rgba(" + Math.floor(color.r*255) + "," + Math.floor(color.g*255) + "," + Math.floor(color.b*255) + ",1)'";
+		}
 
 		this.drawStar = function() {
 			if (this.useImage) {
 				this.starObj = drawSprite(phaserGame, data.x, data.y, data.type.id, {scale:0.1, gameObject:this}, selectStarBridge);	
 			}
 			else {
-				var size = (this.data.n != null) ? 10 : 1;
-			    this.starObj = new Phaser.Circle(data.x*2, data.y*2, size);
+				var isSpecial = (this.data.n == 'Sol');
+				var size = isSpecial ? 4 : 1;
+			    this.starObj = new Phaser.Circle(data.x*2+60, data.y*2+3, size);
 			    this.starObj.gameObject = this;
-			    phaserGame.debug.geom(this.starObj, this.bvToHex(data.ci));
+			    var color = isSpecial ? "rgba(255,0,0,1)" : this.bvToPhaserColor(data.ci);
+			    phaserGame.debug.geom(this.starObj, color);
 			}
 		}
 
@@ -290,7 +295,7 @@
 		var startTime = new Date().getTime();
 		console.log("window.onload started");
 
-		var transparentBG = true;
+		var transparentBG = false;
 		phaserGame = new Phaser.Game(<%= viewportWidth %>, <%= viewportHeight %>, Phaser.AUTO, 'starmap-viewport', 
 				{ preload: preload,create:create, update:update, render:render }, transparentBG);
 
