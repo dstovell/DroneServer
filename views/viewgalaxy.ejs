@@ -19,14 +19,6 @@
 		this.useImage = useImage;
 		this.graphics = graphics;
 
-		this.getFactionColor = function() {
-			return (this.faction != null) ? this.faction.color : 'FFFFFF';
-		}
-
-		this.getFactionName = function() {
-			return (this.faction != null) ? this.faction.fName : 'none';
-		}
-
 		function selectStarBridge(item, pointer)
 		{
 			starMap.selectStar(item.gameObject, pointer);
@@ -36,8 +28,8 @@
 		
 		this.bvToPhaserColor = function(bv) {
 			var color = this.bvToRgb(bv);
-			return "'rgba(" + Math.floor(color.r*255) + "," + Math.floor(color.g*255) + "," + Math.floor(color.b*255) + ",1)'";
-		}
+			return "rgba(" + Math.floor(color.r*255) + "," + Math.floor(color.g*255) + "," + Math.floor(color.b*255) + ",1)";
+		};
 
 		this.drawStar = function() {
 			if (this.useImage) {
