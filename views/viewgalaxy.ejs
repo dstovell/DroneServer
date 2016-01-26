@@ -1,12 +1,13 @@
 <% 	
-	var viewportWidth = 1600;
-	var viewportHeight = 1000;
+	var viewportWidth = 2000;
+	var viewportHeight = 2000;
 	console.log('page started');
 %>
 
 <script>
 
 	var galaxy = <%- JSON.stringify(galaxy) %>;
+	var config = <%- JSON.stringify(config) %>;
 
 	function Star(data, useImage, drawImmediately, graphics)
 	{
@@ -18,29 +19,26 @@
 		this.starObj = null;
 		this.useImage = useImage;
 		this.graphics = graphics;
+		this.x = 1000/galaxy.aabb.x.size * (this.data.x-galaxy.aabb.x.min);
+		this.y = 1000/galaxy.aabb.y.size * (this.data.y-galaxy.aabb.y.min);
 
 		function selectStarBridge(item, pointer)
 		{
 			starMap.selectStar(item.gameObject, pointer);
 		}
 
-		this.bvToRgb = <%- helper.bvToRgb %>;
-		
-		this.bvToPhaserColor = function(bv) {
-			var color = this.bvToRgb(bv);
-			return "rgba(" + Math.floor(color.r*255) + "," + Math.floor(color.g*255) + "," + Math.floor(color.b*255) + ",1)";
-		};
+		self.getStarRadius = <%- helper.getStarRadius %>
 
 		this.drawStar = function() {
 			if (this.useImage) {
 				this.starObj = drawSprite(phaserGame, data.x, data.y, data.type.id, {scale:0.1, gameObject:this}, selectStarBridge);	
 			}
 			else {
-				var isSpecial = (this.data.n == 'Sol');
-				var size = isSpecial ? 4 : 1;
-			    this.starObj = new Phaser.Circle(data.x*2+60, data.y*2+3, size);
+				var isSpecial = false;
+				var size = self.getStarRadius(this.data.M);
+			    this.starObj = new Phaser.Circle(this.x, this.y, size);
 			    this.starObj.gameObject = this;
-			    var color = isSpecial ? "rgba(255,0,0,1)" : this.bvToPhaserColor(data.ci);
+			    var color = isSpecial ? "rgba(255,0,0,1)" : config.stars.classes[this.data.c].color;
 			    phaserGame.debug.geom(this.starObj, color);
 			}
 		}
@@ -101,6 +99,12 @@
 			}
 			return false;
 		}
+
+
+		/*var gradient = bmd.ctx.createRadialGradient(<%= viewportWidth/2 %>, <%= viewportHeight/2 %>, 
+													0, <%= viewportWidth/2 %>, <%= viewportHeight/2 %>, config.coreSize);
+  		gradient.addColorStop(0, '#FFFFFF');
+  		gradient.addColorStop(1, '#000000');*/
 
 		/*for (var i in galaxy.links) {
 			var starA_id = map.links[i][0];
@@ -240,6 +244,17 @@
     	this.updateInput = function(pgame) {
     		updateUiInput(pgame, this);
     		updateDragCamera(pgame, this);
+
+    		/*var pointer = pgame.input.activePointer;
+    		if (pointer.isDown) {
+    			var stars = this.mapRender.stars;
+    			for (var i=0; i<stars.length; i++) {
+    				var star = stars[i];
+    				if (star.starObj.contains(pointer.x, pointer.y)) {
+    					alert(star.data.c);
+    				}
+    			}
+    		}*/
     	}
 
     	this.getStarById = function(starId) {
@@ -301,7 +316,7 @@
 	    function create () {
 	    	console.log("create");
 	    	phaserGame.stage.backgroundColor = "#000000";
-	    	phaserGame.world.setBounds(0, 0, 2000, 2000);
+	    	phaserGame.world.setBounds(0, 0, <%= viewportWidth %>, <%= viewportHeight %>);
 	    	cursors = phaserGame.input.keyboard.createCursorKeys();
 	    	phaserGame.input.addPointer();
 
