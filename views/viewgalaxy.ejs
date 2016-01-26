@@ -1,6 +1,6 @@
 <% 	
-	var viewportWidth = 2000;
-	var viewportHeight = 2000;
+	var viewportWidth = 1000;
+	var viewportHeight = 1000;
 	console.log('page started');
 %>
 
@@ -8,6 +8,29 @@
 
 	var galaxy = <%- JSON.stringify(galaxy) %>;
 	var config = <%- JSON.stringify(config) %>;
+
+	var xCoordScale = <%= viewportWidth %>/galaxy.aabb.x.size;
+	var yCoordScale = <%= viewportHeight %>/galaxy.aabb.y.size;
+
+	console.log("xCoordScale=" + xCoordScale + " yCoordScale=" + yCoordScale);
+
+	function galaxyToDisplayCoords(obj) {
+		var gPos = {x:obj.x, y:obj.y};
+		var dPos = {};
+		dPos.x = xCoordScale * (gPos.x-galaxy.aabb.x.min);
+		dPos.y = yCoordScale * (gPos.y-galaxy.aabb.y.min);
+		console.log("galaxyToDisplayCoords " + JSON.stringify(gPos) + " -> " + JSON.stringify(dPos));
+		return dPos;
+	}
+
+	function displayToGalaxyCoords(obj) {
+		var dPos = {x:obj.x, y:obj.y};
+		var gPos = {};
+		gPos.x = (dPos.x / xCoordScale) + galaxy.aabb.x.min;
+		gPos.y = (dPos.y / yCoordScale) + galaxy.aabb.y.min;
+		console.log("displayToGalaxyCoords " + JSON.stringify(dPos) + " -> " + JSON.stringify(gPos));
+		return gPos;
+	}
 
 	function Star(data, useImage, drawImmediately, graphics)
 	{
@@ -19,8 +42,10 @@
 		this.starObj = null;
 		this.useImage = useImage;
 		this.graphics = graphics;
-		this.x = 1000/galaxy.aabb.x.size * (this.data.x-galaxy.aabb.x.min);
-		this.y = 1000/galaxy.aabb.y.size * (this.data.y-galaxy.aabb.y.min);
+
+		var pos = galaxyToDisplayCoords(this.data);
+		this.x = pos.x;
+		this.y = pos.y;
 
 		function selectStarBridge(item, pointer)
 		{
@@ -60,6 +85,8 @@
 
 	function StarMap()
 	{
+		var self = this;
+
 		console.log('StarMap');
 		this.mapRender = { stars:[], links:[] };
 		this.selectedStar = null;
@@ -241,20 +268,34 @@
 			}
     	}
 
+    	self.getSectorCoordinates = <%- helper.getSectorCoordinates %>
+
     	this.updateInput = function(pgame) {
     		updateUiInput(pgame, this);
     		updateDragCamera(pgame, this);
 
-    		/*var pointer = pgame.input.activePointer;
+    		var pointer = pgame.input.activePointer;
     		if (pointer.isDown) {
-    			var stars = this.mapRender.stars;
-    			for (var i=0; i<stars.length; i++) {
-    				var star = stars[i];
-    				if (star.starObj.contains(pointer.x, pointer.y)) {
-    					alert(star.data.c);
-    				}
-    			}
-    		}*/
+    			var now = (new Date()).getTime();
+    			if ((this.inputTime == null) || ((this.inputTime + 1000) < now)) {
+    				this.inputTime = now;
+	    			/*var stars = this.mapRender.stars;
+	    			for (var i=0; i<stars.length; i++) {
+	    				var star = stars[i];
+	    				if (star.starObj.contains(pointer.x, pointer.y)) {
+	    					alert(star.data.c);
+	    				}
+	    			}*/
+
+	    			var pos = displayToGalaxyCoords(pointer);
+	    			var sectorCoords = self.getSectorCoordinates(pos, galaxy.aabb);
+	    			if (sectorCoords) {
+	    				console.log("pointer.isDown sectorCoords=" + JSON.stringify(sectorCoords));
+	    				var sector = galaxy.sectors[sectorCoords.x][sectorCoords.y];
+	    				console.log("sector=" + JSON.stringify(sector));
+	    			}
+	    		}
+    		}
     	}
 
     	this.getStarById = function(starId) {
