@@ -14,12 +14,27 @@
 
 	console.log("xCoordScale=" + xCoordScale + " yCoordScale=" + yCoordScale);
 
+	function generateSpiral(startPoint, openingRate, arcLength, startAngle) {
+		var maxAngle = arcLength * 2 * Math.PI + startAngle;
+		var segmentArc = 0.05;
+		var r = 10;
+		var arc = [];
+		for (var t=startAngle;t<maxAngle;t+=segmentArc) { 
+			var p = {};
+			p.x = startPoint.x + r*Math.cos(t);
+			p.y = startPoint.x + r*Math.sin(t);
+			arc.push(p);
+			r += openingRate;
+		}
+		return arc;
+	};
+
 	function galaxyToDisplayCoords(obj) {
 		var gPos = {x:obj.x, y:obj.y};
 		var dPos = {};
 		dPos.x = xCoordScale * (gPos.x-galaxy.aabb.x.min);
 		dPos.y = yCoordScale * (gPos.y-galaxy.aabb.y.min);
-		console.log("galaxyToDisplayCoords " + JSON.stringify(gPos) + " -> " + JSON.stringify(dPos));
+		//console.log("galaxyToDisplayCoords " + JSON.stringify(gPos) + " -> " + JSON.stringify(dPos));
 		return dPos;
 	}
 
@@ -140,6 +155,27 @@
 
 		bmd.cls();
 		bmd.circle(<%= viewportWidth/2 %>, <%= viewportWidth/2 %>, config.coreSize, gradient);
+
+		function addSpiral(startAngle, graphics) {
+			var arc = generateSpiral({x:<%= viewportWidth/2 %>, y:<%= viewportWidth/2 %>}, config.spirals.openingRate, config.spirals.arcLength, startAngle);
+
+			var width = 50;
+			for (var i=1; i<arc.length; i++) {
+				var lastPos = arc[i-1];
+				var nextPos = arc[i];
+
+				var color = 'FFFFFF';
+				graphics.lineStyle(width, parseInt(color, 16));
+	    		graphics.moveTo(lastPos.x, lastPos.y);
+	    		graphics.lineTo(nextPos.x, nextPos.y);
+	    		width -= 0.5;
+			}
+		}
+
+		var spiralInc = 2*Math.PI/config.spirals.count;
+		for (var i=0; i<config.spirals.count; i++) {
+			//addSpiral(i*spiralInc, this.graphics);
+		}
 
 		/*for (var i in galaxy.links) {
 			var starA_id = map.links[i][0];
