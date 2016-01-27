@@ -127,11 +127,19 @@
 			return false;
 		}
 
+		 //  Our BitmapData (same size as our canvas)
+	    var bmd = phaserGame.make.bitmapData(<%= viewportWidth %>, <%= viewportHeight %>);
 
-		/*var gradient = bmd.ctx.createRadialGradient(<%= viewportWidth/2 %>, <%= viewportHeight/2 %>, 
-													0, <%= viewportWidth/2 %>, <%= viewportHeight/2 %>, config.coreSize);
-  		gradient.addColorStop(0, '#FFFFFF');
-  		gradient.addColorStop(1, '#000000');*/
+	    //  Add it to the world or we can't see it
+	    bmd.addToWorld();
+
+		var gradient = bmd.ctx.createRadialGradient(<%= viewportWidth/2 %>, <%= viewportHeight/2 %>, 
+													config.coreSize*0.3, <%= viewportWidth/2 %>, <%= viewportHeight/2 %>, config.coreSize*0.5);
+  		gradient.addColorStop(0, 'rgba(255,255,255,0.9)');
+  		gradient.addColorStop(1, 'transparent');
+
+		bmd.cls();
+		bmd.circle(<%= viewportWidth/2 %>, <%= viewportWidth/2 %>, config.coreSize, gradient);
 
 		/*for (var i in galaxy.links) {
 			var starA_id = map.links[i][0];
