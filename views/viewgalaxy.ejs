@@ -161,16 +161,16 @@
 		function addSpiral(startAngle, graphics) {
 			var arc = generateSpiral({x:<%= viewportWidth/2 %>, y:<%= viewportWidth/2 %>}, config.spirals.openingRate, config.spirals.arcLength, startAngle);
 
-			var width = 10;
+			var width = 25;
 			for (var i=1; i<arc.length; i++) {
 				var lastPos = arc[i-1];
 				var nextPos = arc[i];
 
 				var color = 'FFFFFF';
-				graphics.lineStyle(width, parseInt(color, 16), 0.5);
+				graphics.lineStyle(width, parseInt(color, 16), 0.12);
 	    		graphics.moveTo(lastPos.x, lastPos.y);
 	    		graphics.lineTo(nextPos.x, nextPos.y);
-	    		width -= 0.05;
+	    		width -= 0.1;
 			}
 			return arc;
 		}
