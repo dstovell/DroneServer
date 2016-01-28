@@ -150,7 +150,7 @@
 
 		var gradient = bmd.ctx.createRadialGradient(<%= viewportWidth/2 %>, <%= viewportHeight/2 %>, 
 													config.coreSize*0.3, <%= viewportWidth/2 %>, <%= viewportHeight/2 %>, config.coreSize*0.5);
-  		gradient.addColorStop(0, 'rgba(255,255,255,0.9)');
+  		gradient.addColorStop(0, 'rgba(255,255,255,1.0)');
   		gradient.addColorStop(1, 'transparent');
 
 		bmd.cls();
@@ -159,7 +159,7 @@
 		function addSpiral(startAngle, graphics) {
 			var arc = generateSpiral({x:<%= viewportWidth/2 %>, y:<%= viewportWidth/2 %>}, config.spirals.openingRate, config.spirals.arcLength, startAngle);
 
-			var width = 50;
+			var width = 4;
 			for (var i=1; i<arc.length; i++) {
 				var lastPos = arc[i-1];
 				var nextPos = arc[i];
@@ -168,13 +168,16 @@
 				graphics.lineStyle(width, parseInt(color, 16));
 	    		graphics.moveTo(lastPos.x, lastPos.y);
 	    		graphics.lineTo(nextPos.x, nextPos.y);
-	    		width -= 0.5;
+	    		//width -= 0.1;
 			}
+			return arc;
 		}
 
 		var spiralInc = 2*Math.PI/config.spirals.count;
+		this.spirals = [];
 		for (var i=0; i<config.spirals.count; i++) {
-			//addSpiral(i*spiralInc, this.graphics);
+			var arc = addSpiral(i*spiralInc, this.graphics);
+			this.spirals.push(arc);
 		}
 
 		/*for (var i in galaxy.links) {
@@ -312,7 +315,13 @@
 			}
     	}
 
+    	self.dimensionKeys = <%- JSON.stringify(helper.dimensionKeys) %>
+    	self.getDistanceSquared = <%- helper.getDistanceSquared %>
+    	self.getDistance = <%- helper.getDistance %>
     	self.getSectorCoordinates = <%- helper.getSectorCoordinates %>
+    	self.distToSegmentSquared = <%- helper.distToSegmentSquared %>
+    	self.getDistanceFromArc = <%- helper.getDistanceFromArc %>
+    	self.getDistanceFromAnySpiral = <%- helper.getDistanceFromAnySpiral %>
 
     	this.updateInput = function(pgame) {
     		updateUiInput(pgame, this);
@@ -336,7 +345,10 @@
 	    			if (sectorCoords) {
 	    				console.log("pointer.isDown sectorCoords=" + JSON.stringify(sectorCoords));
 	    				var sector = galaxy.sectors[sectorCoords.x][sectorCoords.y];
-	    				console.log("sector=" + JSON.stringify(sector));
+	    				//console.log("sector=" + JSON.stringify(sector));
+
+	    				var distFromSpirals = self.getDistanceFromAnySpiral({x:pointer.x, y:pointer.y}, this.spirals);
+	    				console.log("distFromSpirals=" + distFromSpirals);
 	    			}
 	    		}
     		}
