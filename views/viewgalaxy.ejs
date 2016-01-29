@@ -14,21 +14,6 @@
 
 	console.log("xCoordScale=" + xCoordScale + " yCoordScale=" + yCoordScale);
 
-	function generateSpiral(startPoint, openingRate, arcLength, startAngle) {
-		var maxAngle = arcLength * 2 * Math.PI + startAngle;
-		var segmentArc = 0.05;
-		var r = 10;
-		var arc = [];
-		for (var t=startAngle;t<maxAngle;t+=segmentArc) { 
-			var p = {};
-			p.x = startPoint.x + r*Math.cos(t);
-			p.y = startPoint.x + r*Math.sin(t);
-			arc.push(p);
-			r += openingRate;
-		}
-		return arc;
-	};
-
 	function galaxyToDisplayCoords(obj) {
 		var gPos = {x:obj.x, y:obj.y};
 		var dPos = {};
@@ -119,6 +104,16 @@
 
 		this.graphics = phaserGame.add.graphics(0, 0);
 
+		self.dimensionKeys = <%- JSON.stringify(helper.dimensionKeys) %>
+    	self.getDistanceSquared = <%- helper.getDistanceSquared %>
+    	self.getDistance = <%- helper.getDistance %>
+    	self.getSectorCoordinates = <%- helper.getSectorCoordinates %>
+    	self.generateSpiral = <%- helper.generateSpiral %>
+    	self.generateSpirals = <%- helper.generateSpirals %>
+    	self.distToSegmentSquared = <%- helper.distToSegmentSquared %>
+    	self.getDistanceFromArc = <%- helper.getDistanceFromArc %>
+    	self.getDistanceFromAnySpiral = <%- helper.getDistanceFromAnySpiral %>
+
 		function getPoints(posA, posB, ringRadius) {
 
 			var dirV = normalizeVector2( diffVector2(posA, posB) );
@@ -151,35 +146,31 @@
 	    bmd.addToWorld();
 
 		var gradient = bmd.ctx.createRadialGradient(<%= viewportWidth/2 %>, <%= viewportHeight/2 %>, 
-													config.coreSize*0.3, <%= viewportWidth/2 %>, <%= viewportHeight/2 %>, config.coreSize*0.5);
-  		gradient.addColorStop(0, 'rgba(255,255,255,1.0)');
+													config.coreSize*0.3, <%= viewportWidth/2 %>, <%= viewportHeight/2 %>, config.coreSize*0.8);
+  		gradient.addColorStop(0, 'rgba(200,200,200,1.0)');
   		gradient.addColorStop(1, 'transparent');
 
 		bmd.cls();
 		bmd.circle(<%= viewportWidth/2 %>, <%= viewportWidth/2 %>, config.coreSize, gradient);
 
-		function addSpiral(startAngle, graphics) {
-			var arc = generateSpiral({x:<%= viewportWidth/2 %>, y:<%= viewportWidth/2 %>}, config.spirals.openingRate, config.spirals.arcLength, startAngle);
+		this.spirals = self.generateSpirals({x:0, y:0}, config);
+
+
+		//replace with self.generateSpirals
+		for (var sp=0; sp<this.spirals.length; sp++) {
+			var arc = this.spirals[sp];
 
 			var width = 25;
 			for (var i=1; i<arc.length; i++) {
-				var lastPos = arc[i-1];
-				var nextPos = arc[i];
+				var lastPos = galaxyToDisplayCoords(arc[i-1]);
+				var nextPos = galaxyToDisplayCoords(arc[i]);
 
 				var color = 'FFFFFF';
-				graphics.lineStyle(width, parseInt(color, 16), 0.1);
-	    		graphics.moveTo(lastPos.x, lastPos.y);
-	    		graphics.lineTo(nextPos.x, nextPos.y);
+				this.graphics.lineStyle(width, parseInt(color, 16), 0.1);
+	    		this.graphics.moveTo(lastPos.x, lastPos.y);
+	    		this.graphics.lineTo(nextPos.x, nextPos.y);
 	    		width -= 0.1;
 			}
-			return arc;
-		}
-
-		var spiralInc = 2*Math.PI/config.spirals.count;
-		this.spirals = [];
-		for (var i=0; i<config.spirals.count; i++) {
-			//var arc = addSpiral(i*spiralInc, this.graphics);
-			//this.spirals.push(arc);
 		}
 
 		/*for (var i in galaxy.links) {
@@ -318,14 +309,6 @@
 				this.selectedStar.selectedUpdate();
 			}
     	}
-
-    	self.dimensionKeys = <%- JSON.stringify(helper.dimensionKeys) %>
-    	self.getDistanceSquared = <%- helper.getDistanceSquared %>
-    	self.getDistance = <%- helper.getDistance %>
-    	self.getSectorCoordinates = <%- helper.getSectorCoordinates %>
-    	self.distToSegmentSquared = <%- helper.distToSegmentSquared %>
-    	self.getDistanceFromArc = <%- helper.getDistanceFromArc %>
-    	self.getDistanceFromAnySpiral = <%- helper.getDistanceFromAnySpiral %>
 
     	this.updateInput = function(pgame) {
     		updateUiInput(pgame, this);
