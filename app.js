@@ -84,6 +84,7 @@ exports.init = function (port) {
     app.use('/admin', require('./routes/admin/index'));
     app.use('/admin/users', require('./routes/admin/users')(options) );
     app.use('/admin/galaxy', require('./routes/admin/galaxy')(options) );
+    app.use('/admin/assets', require('./routes/admin/assets')(options) );
 
     app.use('/api/users', require('./routes/api/users'));
 

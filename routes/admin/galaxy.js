@@ -29,9 +29,7 @@ exports = module.exports = function routeSetup(options) {
         galaxy_controller.getStar(starId, function(err, star){
             return res.json({err:err, result:star});
         });
-    });
-
-   
+    });   
 
     return router;
 }
